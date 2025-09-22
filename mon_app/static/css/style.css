@@ -10,7 +10,7 @@ body {
 /* Styles spécifiques pour la page de login */
 body.login-page {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    
+
     background: linear-gradient(rgba(102, 126, 234, 0.8), rgba(118, 75, 162, 0.8)) fixed center;
     height: 100vh;
     margin: 0;
