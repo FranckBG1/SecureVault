@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SecureVault - Connexion</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body class="login-page">
+    <div class="login-container">
+        <div class="login-card">
+            <div class="logo">
+                <div style="font-size: 3rem; color: #667eea; margin-bottom: 10px;">🔒</div>
+                <h1>SecureVault</h1>
+            </div>
+            
+            <form method="POST" class="login-form">
+                {{ form.hidden_tag() }}
+                <h2>Connexion</h2>
+
+                <div class="input-group">
+                    <i class="fas fa-user"></i>
+                    {{ form.username(class="input-field", placeholder="Nom d'utilisateur") }}
+                </div>
+
+                <div class="input-group">
+                    <i class="fas fa-lock"></i>
+                    {{ form.password(class="input-field", placeholder="Mot de passe") }}
+                </div>
+
+                <div class="input-group">
+                    {{ form.submit(class="btn") }}
+                </div>
+
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                  {% if messages %}
+                    <div class="flash-messages">
+                      {% for category, message in messages %}
+                        <div class="flash-message {{ category }}">
+                            <i class="fas fa-info-circle"></i>
+                            {{ message }}
+                        </div>
+                      {% endfor %}
+                    </div>
+                  {% endif %}
+                {% endwith %}
+            </form>
+        </div>
+    </div>
+</body>
+</html>
