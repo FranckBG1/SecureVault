@@ -27,24 +27,19 @@
                             Tableau de bord
                         </a>
                     </li>
-                    <li class="nav-item {% block nav_passwords %}{% endblock %}">
-                        <a href="#" class="nav-link" id="passwords-link">
-                            <i class="fas fa-key"></i>
-                            Mes mots de passe
-                        </a>
-                    </li>
+
                     <li class="nav-item {% block nav_generator %}{% endblock %}">
                         <a href="/password" class="nav-link">
                             <i class="fas fa-random"></i>
                             Générateur
                         </a>
                     </li>
-<!--                    <li class="nav-item {% block nav_settings %}{% endblock %}">-->
-<!--                        <a href="/settings" class="nav-link">-->
-<!--                            <i class="fas fa-cog"></i>-->
-<!--                            Paramètres-->
-<!--                        </a>-->
-<!--                    </li>-->
+                    <li class="nav-item {% block nav_settings %}{% endblock %}">
+                        <a href="/settings" class="nav-link">
+                            <i class="fas fa-cog"></i>
+                            Paramètres
+                        </a>
+                    </li>
                 </ul>
             </nav>
 
@@ -62,9 +57,18 @@
         </div>
     </div>
     
-    <!-- Script global pour la déconnexion -->
+    <!-- Script global pour la déconnexion et verrouillage automatique -->
     <script>
+        // Variables globales pour le verrouillage automatique
+        window.autoLockTimeout = 5; // en minutes
+        window.lastActivity = Date.now();
+        window.lockTimer = null;
+        
         document.addEventListener('DOMContentLoaded', function() {
+            // Initialise le verrouillage automatique
+            initAutoLock();
+            
+            // Gestion de la déconnexion
             const logoutBtn = document.getElementById('logout-btn');
             if (logoutBtn) {
                 logoutBtn.addEventListener('click', function(e) {
@@ -82,6 +86,102 @@
                 });
             }
         });
+        
+        // Initialisation du système de verrouillage automatique
+        function initAutoLock() {
+            // Charge les paramètres de verrouillage
+            loadAutoLockSettings();
+            
+            // Met à jour l'activité sur les interactions utilisateur
+            const events = ['mousedown', 'mousemove', 'keypress', 'scroll', 'touchstart', 'click'];
+            events.forEach(event => {
+                document.addEventListener(event, updateActivity, true);
+            });
+            
+            // Démarre le timer
+            window.startLockTimer();
+        }
+        
+        // Charge les paramètres de verrouillage
+        async function loadAutoLockSettings() {
+            try {
+                const response = await fetch('/api/settings/auto-lock');
+                if (response.ok) {
+                    const data = await response.json();
+                    window.autoLockTimeout = data.timeout;
+                } else {
+                    // Fallback sur localStorage
+                    const savedTimeout = localStorage.getItem('autoLockTime');
+                    window.autoLockTimeout = savedTimeout ? parseFloat(savedTimeout) : 5;
+                }
+            } catch (error) {
+                console.error('Erreur lors du chargement des paramètres:', error);
+                const savedTimeout = localStorage.getItem('autoLockTime');
+                window.autoLockTimeout = savedTimeout ? parseFloat(savedTimeout) : 15;
+            }
+        }
+        
+        // Met à jour la dernière activité
+        function updateActivity() {
+            window.lastActivity = Date.now();
+        }
+        
+        // Démarre le timer de verrouillage
+        window.startLockTimer = function() {
+            if (window.lockTimer) {
+                clearInterval(window.lockTimer);
+            }
+            
+            // Vérifie toutes les secondes
+            window.lockTimer = setInterval(checkAutoLock, 1000);
+        }
+        
+        // Vérifie si il faut verrouiller
+        function checkAutoLock() {
+            if (window.autoLockTimeout === 0) return; // Verrouillage désactivé
+            
+            const timeoutMs = window.autoLockTimeout * 60 * 1000; // Convertit en millisecondes
+            const timeSinceActivity = Date.now() - window.lastActivity;
+            
+            if (timeSinceActivity >= timeoutMs) {
+                // Verrouille l'application
+                lockApplication();
+            }
+        }
+        
+        // Verrouille l'application
+        async function lockApplication() {
+            if (window.lockTimer) {
+                clearInterval(window.lockTimer);
+            }
+            
+            try {
+                // Appelle l'API de déconnexion
+                await fetch('/api/logout', { method: 'POST' });
+            } catch (error) {
+                console.error('Erreur lors de la déconnexion:', error);
+            }
+            
+            // Affiche une notification et redirige
+            showGlobalNotification('Session expirée par inactivité', 'warning');
+            setTimeout(() => {
+                window.location.href = '/login';
+            }, 1000);
+        }
+        
+        // Notification globale simple
+        function showGlobalNotification(message, type) {
+            const notification = document.createElement('div');
+            notification.className = `notification ${type}`;
+            notification.textContent = message;
+            notification.style.cssText = `
+                position: fixed; top: 20px; right: 20px; z-index: 10000;
+                padding: 12px 20px; border-radius: 8px; color: white;
+                background: ${type === 'success' ? '#4CAF50' : type === 'warning' ? '#ff9800' : '#f44336'};
+            `;
+            document.body.appendChild(notification);
+            setTimeout(() => notification.remove(), 3000);
+        }
     </script>
     
     {% block scripts %}{% endblock %}

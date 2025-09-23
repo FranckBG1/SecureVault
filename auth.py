@@ -104,8 +104,15 @@ class SessionManager:
         if not last_activity:
             return True
 
+        # Récupère le timeout personnalisé de l'utilisateur ou utilise la valeur par défaut
+        user_timeout = session.get('auto_lock_timeout', current_app.config.get('AUTO_LOGOUT_TIME', 1800))
+        
+        # Si timeout = 0, pas de verrouillage automatique
+        if user_timeout == 0:
+            return False
+
         last_activity_time = datetime.fromisoformat(last_activity)
-        timeout_duration = timedelta(seconds=current_app.config.get('AUTO_LOGOUT_TIME', 1800))
+        timeout_duration = timedelta(seconds=user_timeout)
 
         return datetime.now() - last_activity_time > timeout_duration
 
