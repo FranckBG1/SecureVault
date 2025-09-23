@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}SecureVault{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    {% block head %}{% endblock %}
+</head>
+<body class="{% block body_class %}dashboard-page{% endblock %}">
+    <div class="dashboard-container">
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <div class="sidebar-header">
+                <div class="logo">
+                    <div style="font-size: 2rem; color: #667eea; margin-bottom: 5px;">🔒</div>
+                    <h2>SecureVault</h2>
+                </div>
+            </div>
+
+            <nav class="sidebar-nav">
+                <ul class="nav-menu">
+                    <li class="nav-item {% block nav_dashboard %}{% endblock %}">
+                        <a href="/dashboard" class="nav-link">
+                            <i class="fas fa-home"></i>
+                            Tableau de bord
+                        </a>
+                    </li>
+                    <li class="nav-item {% block nav_passwords %}{% endblock %}">
+                        <a href="#" class="nav-link" id="passwords-link">
+                            <i class="fas fa-key"></i>
+                            Mes mots de passe
+                        </a>
+                    </li>
+                    <li class="nav-item {% block nav_generator %}{% endblock %}">
+                        <a href="/password" class="nav-link">
+                            <i class="fas fa-random"></i>
+                            Générateur
+                        </a>
+                    </li>
+                    <li class="nav-item {% block nav_settings %}{% endblock %}">
+                        <a href="#" class="nav-link">
+                            <i class="fas fa-cog"></i>
+                            Paramètres
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+
+            <div class="sidebar-footer">
+                <a href="#" class="nav-link" id="logout-btn">
+                    <i class="fas fa-sign-out-alt"></i>
+                    <span>Déconnexion</span>
+                </a>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            {% block content %}{% endblock %}
+        </div>
+    </div>
+    
+    <!-- Script global pour la déconnexion -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const logoutBtn = document.getElementById('logout-btn');
+            if (logoutBtn) {
+                logoutBtn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    
+                    // Appel API de déconnexion
+                    fetch('/api/logout', { method: 'POST' })
+                        .then(() => {
+                            window.location.href = '/login';
+                        })
+                        .catch(() => {
+                            // Redirection forcée même en cas d'erreur
+                            window.location.href = '/login';
+                        });
+                });
+            }
+        });
+    </script>
+    
+    {% block scripts %}{% endblock %}
+</body>
+</html>

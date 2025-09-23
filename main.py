@@ -14,9 +14,6 @@ def main():
     # Détermine l'environnement
     env = os.environ.get('FLASK_ENV', 'development')
     
-    # Crée l'application
-    app = create_app(env)
-    
     # Configuration du serveur
     host = os.environ.get('FLASK_HOST', '127.0.0.1')
     port = int(os.environ.get('FLASK_PORT', 5000))
@@ -50,6 +47,7 @@ Pages web:
     """)
     
     try:
+        app = create_app(env)
         app.run(host=host, port=port, debug=debug)
     except KeyboardInterrupt:
         print("\n👋 Arrêt de SecureVault")
