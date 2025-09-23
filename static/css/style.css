@@ -236,37 +236,23 @@ body.login-page {
 .strength-fill.very-strong { background: #00aa00; }
 
 /* Styles pour le générateur de mots de passe */
-body.password-page {
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    min-height: 100vh;
-    margin: 0;
-    padding: 20px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-}
-
-.password-container {
-    width: 100%;
-    max-width: 500px;
-}
-
 .password-card {
     background: white;
     border-radius: 16px;
     box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
-    padding: 40px;
+    padding: 25px;
     text-align: center;
+    max-width: 450px;
+    margin: 0 auto;
 }
 
 .password-options {
     text-align: left;
-    margin: 30px 0;
+    margin: 20px 0;
 }
 
 .option-group {
-    margin-bottom: 15px;
+    margin-bottom: 10px;
 }
 
 .checkbox-label {
@@ -288,7 +274,7 @@ body.password-page {
 }
 
 .length-group {
-    margin: 20px 0;
+    margin: 15px 0;
     text-align: center;
 }
 
@@ -332,7 +318,7 @@ body.password-page {
 }
 
 .password-result {
-    margin: 25px 0;
+    margin: 15px 0;
 }
 
 .password-display {
@@ -349,13 +335,13 @@ body.password-page {
 }
 
 .strength-meter {
-    margin: 20px 0;
+    margin: 15px 0;
 }
 
 .button-group {
     display: flex;
-    gap: 10px;
-    margin-top: 25px;
+    gap: 8px;
+    margin-top: 20px;
 }
 
 .button-group .btn {
@@ -416,6 +402,19 @@ body.password-page {
 
 .copy-notification i {
     margin-right: 8px;
+}
+
+/* Message d'erreur pour le générateur */
+.error-message {
+    background: #fee;
+    color: #c33;
+    border: 1px solid #fcc;
+    padding: 10px 15px;
+    border-radius: 8px;
+    margin-bottom: 15px;
+    font-size: 14px;
+    font-weight: 500;
+    text-align: center;
 }
 
 /* Styles pour le dashboard */
@@ -695,7 +694,7 @@ body.dashboard-page {
 
     .content-header {
         flex-direction: column;
-        gap: 15px;
+        gap: 10px;
         align-items: stretch;
     }
 

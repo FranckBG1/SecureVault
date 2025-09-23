@@ -1,62 +1,10 @@
-<!DOCTYPE html>
-<html lang="fr">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SecureVault - Dashboard</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-</head>
-<body class="dashboard-page">
-    <div class="dashboard-container">
-        <!-- Sidebar -->
-        <div class="sidebar">
-            <div class="sidebar-header">
-                <div class="logo">
-                    <div style="font-size: 2rem; color: #667eea; margin-bottom: 5px;">🔒</div>
-                    <h2>SecureVault</h2>
-                </div>
-            </div>
+{% extends "layout.html" %}
 
-            <nav class="sidebar-nav">
-                <ul class="nav-menu">
-                    <li class="nav-item active">
-                        <a href="/dashboard" class="nav-link">
-                            <i class="fas fa-home"></i>
-                            Tableau de bord
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a href="#" class="nav-link" id="passwords-link">
-                            <i class="fas fa-key"></i>
-                            Mes mots de passe
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a href="/password" class="nav-link">
-                            <i class="fas fa-random"></i>
-                            Générateur
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a href="#" class="nav-link">
-                            <i class="fas fa-cog"></i>
-                            Paramètres
-                        </a>
-                    </li>
-                </ul>
-            </nav>
+{% block title %}SecureVault - Dashboard{% endblock %}
 
-            <div class="sidebar-footer">
-                <a href="#" class="nav-link" id="logout-btn">
-                    <i class="fas fa-sign-out-alt"></i>
-                    <span>Déconnexion</span>
-                </a>
-            </div>
-        </div>
+{% block nav_dashboard %}active{% endblock %}
 
-        <!-- Main Content -->
-        <div class="main-content">
+{% block content %}
             <div class="content-header">
                 <h1>Mes mots de passe</h1>
                 <button class="add-btn" id="add-password">
@@ -111,10 +59,10 @@
                     </button>
                 </div>
             </div>
-        </div>
-    </div>
+{% endblock %}
 
-    <script>
+{% block scripts %}
+<script>
         // Variables globales
         let passwords = [];
         let currentUser = null;
@@ -385,6 +333,5 @@
         window.addEventListener('load', () => {
             checkAuthentication();
         });
-    </script>
-</body>
-</html>
+</script>
+{% endblock %}
