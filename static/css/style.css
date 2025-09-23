@@ -1042,12 +1042,7 @@ textarea.form-input {
         width: 95%;
         margin: 10px;
         max-height: 95vh;
-   
-    .content-header {
-        flex-direction: column;
-        gap: 10px;
-        align-items: stretch;
-      }
+    }
     .modal-header,
     .password-form {
         padding: 16px;
@@ -1101,3 +1096,4 @@ textarea.form-input {
     margin: 2px 4px 2px 0;
     font-weight: 500;
 }
+
