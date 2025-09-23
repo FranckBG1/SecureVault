@@ -151,8 +151,13 @@ def require_master_password(f):
     """Décorateur pour vérifier le mot de passe maître pour les opérations sensibles"""
     @wraps(f)
     def decorated_function(*args, **kwargs):
+        # Essaie d'abord de récupérer depuis le JSON
         data = request.get_json()
         master_password = data.get('master_password') if data else None
+
+        # Si pas trouvé dans le JSON, essaie l'en-tête HTTP
+        if not master_password:
+            master_password = request.headers.get('X-Master-Password')
 
         if not master_password:
             return jsonify({'error': 'Mot de passe maître requis'}), 400
