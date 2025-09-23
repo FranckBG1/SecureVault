@@ -5,29 +5,28 @@ Gestionnaire de mots de passe sécurisé avec chiffrement AES-256
 import json
 import os
 
-from flask import Flask, request, jsonify, session, render_template
+from flask import Flask, request, jsonify, session, render_template, flash, redirect
 from flask_session import Session
-
-from .auth import SessionManager, login_required, get_current_user_id, require_master_password
-from .config import config
-from .crypto_utils import PasswordGenerator, CryptoManager
-from .database import DatabaseManager
-from flask import Flask, render_template, request, flash
 from flask_wtf import FlaskForm
 from wtforms import StringField, PasswordField, SubmitField
 from wtforms.validators import DataRequired
 
+from auth import SessionManager, login_required, get_current_user_id, require_master_password
+from config import config
+from crypto_utils import PasswordGenerator, CryptoManager
+from database import DatabaseManager
 
-def create_app(config_name='default'):
-    """Factory pour créer l'application Flask"""
-    app = Flask(__name__)
-app = Flask(__name__)
-app.config['SECRET_KEY'] = 'votre-clé-secrète'
 
 class LoginForm(FlaskForm):
     username = StringField('Nom d\'utilisateur', validators=[DataRequired()])
     password = PasswordField('Mot de passe', validators=[DataRequired()])
     submit = SubmitField('Se connecter')
+
+
+def create_app(config_name='default'):
+    """Factory pour créer l'application Flask"""
+    app = Flask(__name__)
+    app.config['SECRET_KEY'] = 'votre-clé-secrète'
 
     # Configuration
     app.config.from_object(config[config_name])
@@ -310,33 +309,37 @@ class LoginForm(FlaskForm):
     @app.route('/')
     def index():
         """Page d'accueil"""
-        return render_template('index.html')
-@app.route('/')
-def dashboard():
-    return render_template('dashboard.html')
-
-@app.route('/login', methods=['GET', 'POST'])
-def login():
-    form = LoginForm()
-    if form.validate_on_submit():
-        # Logique de connexion ici
-        flash('Connexion réussie!', 'success')
-    return render_template('login.html', form=form)
-@app.route('/password')
-def password():
-    return render_template('password.html')
-
-    @app.route('/login')
-    def login_page():
-        """Page de connexion"""
         return render_template('login.html')
 
+    @app.route('/login', methods=['GET', 'POST'])
+    def login_page():
+        """Page de connexion - Gère aussi les redirections après authentification"""
+        # Si l'utilisateur est déjà connecté, redirige vers le dashboard
+        if session.get('user_id'):
+            session_manager = SessionManager(app.db)
+            if session_manager.validate_session():
+                return redirect('/dashboard')
+
+        # Affiche la page de connexion
+        form = LoginForm()
+        if form.validate_on_submit():
+            # TODO: Intégrer avec l'API de connexion
+            flash('Connexion réussie!', 'success')
+            return redirect('/dashboard')
+        return render_template('login.html', form=form)
+
     @app.route('/dashboard')
+    @login_required
     def dashboard_page():
-        """Page du tableau de bord"""
+        """Page du tableau de bord - Protégée par authentification"""
         return render_template('dashboard.html')
 
-    @app.route('/passwords')
+    @app.route('/password')  # Corrigé pour correspondre aux liens du template
+    def password_page():
+        """Page du générateur de mots de passe"""
+        return render_template('password.html')
+
+    @app.route('/passwords')  # Garde cette route pour la cohérence
     def passwords_page():
         """Page de gestion des mots de passe"""
         return render_template('passwords.html')

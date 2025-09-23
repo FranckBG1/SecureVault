@@ -7,7 +7,7 @@ import sys
 # Ajoute le répertoire parent au chemin Python
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-from mon_app import create_app
+from app import create_app
 
 def main():
     """Point d'entrée principal"""
