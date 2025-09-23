@@ -95,7 +95,7 @@ body.login-page {
 
 .input-field {
     width: 100%;
-    padding: 15px 15px 15px 45px;
+    padding: 15px 50px 15px 45px; /* Padding ajusté pour le bouton à droite */
     border: 2px solid #e0e0e0;
     border-radius: 8px;
     font-size: 16px;
@@ -107,6 +107,38 @@ body.login-page {
     outline: none;
     border-color: #667eea;
     box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+/* Bouton pour basculer la visibilité du mot de passe */
+.toggle-password-btn {
+    position: absolute;
+    right: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    color: #999;
+    cursor: pointer;
+    font-size: 16px;
+    padding: 5px;
+    border-radius: 4px;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    height: 30px;
+}
+
+.toggle-password-btn:hover {
+    color: #667eea;
+    background-color: #f0f0f0;
+}
+
+.toggle-password-btn:focus {
+    outline: none;
+    color: #667eea;
+    background-color: #e8ecf5;
 }
 
 .btn {
@@ -676,75 +708,392 @@ body.dashboard-page {
     box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
 }
 
-/* Responsive design pour le dashboard */
+/* Styles pour les modals */
+.modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.6);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 2000;
+    backdrop-filter: blur(4px);
+    /* S'assurer que la modal est toujours centrée */
+    padding: 20px;
+    box-sizing: border-box;
+}
+
+.modal-content {
+    background: white;
+    border-radius: 20px;
+    width: 90%;
+    max-width: 650px;
+    max-height: 85vh;
+    overflow-y: auto;
+    box-shadow: 0 25px 80px rgba(0, 0, 0, 0.25);
+    animation: modalSlideIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    /* Centrage parfait */
+    margin: auto;
+    position: relative;
+}
+
+@keyframes modalSlideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-30px) scale(0.95);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 24px 28px;
+    border-bottom: 1px solid #f0f0f0;
+    background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+    border-radius: 20px 20px 0 0;
+}
+
+.modal-header h3 {
+    margin: 0;
+    color: #2c3e50;
+    font-weight: 600;
+    font-size: 1.3rem;
+}
+
+.modal-close {
+    background: #f8f9fa;
+    border: none;
+    font-size: 20px;
+    color: #7f8c8d;
+    cursor: pointer;
+    padding: 10px;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+}
+
+.modal-close:hover {
+    background: #e74c3c;
+    color: white;
+    transform: rotate(90deg);
+}
+
+/* Styles pour le formulaire de mot de passe */
+.password-form {
+    padding: 28px;
+}
+
+.form-group {
+    margin-bottom: 24px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 600;
+    color: #2c3e50;
+    font-size: 14px;
+}
+
+.form-input {
+    width: 100%;
+    padding: 14px 18px;
+    border: 2px solid #e8ecef;
+    border-radius: 12px;
+    font-size: 16px;
+    transition: all 0.3s ease;
+    box-sizing: border-box;
+    font-family: inherit;
+    background: #fdfdfd;
+}
+
+.form-input:focus {
+    outline: none;
+    border-color: #667eea;
+    box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.12);
+    background: white;
+}
+
+.form-input:invalid {
+    border-color: #e74c3c;
+    box-shadow: 0 0 0 4px rgba(231, 76, 60, 0.12);
+}
+
+textarea.form-input {
+    resize: vertical;
+    min-height: 90px;
+    line-height: 1.5;
+}
+
+.form-help {
+    display: block;
+    margin-top: 6px;
+    font-size: 12px;
+    color: #7f8c8d;
+    font-style: italic;
+}
+
+/* Groupe d'input pour le mot de passe */
+.password-input-group {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.password-input-group .form-input {
+    padding-right: 110px;
+}
+
+.toggle-visibility,
+.generate-btn-small {
+    position: absolute;
+    background: #f8f9fa;
+    border: 1px solid #e0e0e0;
+    padding: 8px;
+    cursor: pointer;
+    color: #667eea;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+    font-size: 14px;
+}
+
+.toggle-visibility {
+    right: 50px;
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.generate-btn-small {
+    right: 8px;
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.toggle-visibility:hover,
+.generate-btn-small:hover {
+    background: #667eea;
+    color: white;
+    border-color: #667eea;
+    transform: scale(1.1);
+}
+
+/* Indicateur de force du mot de passe dans la modal */
+.password-strength-modal {
+    margin: 16px 0;
+    padding: 16px;
+    background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+    border-radius: 12px;
+    border: 1px solid #e8ecef;
+}
+
+.password-strength-modal .strength-label {
+    font-size: 13px;
+    color: #2c3e50;
+    margin-bottom: 8px;
+    font-weight: 600;
+}
+
+.password-strength-modal .strength-bar {
+    width: 100%;
+    height: 10px;
+    background: #ecf0f1;
+    border-radius: 6px;
+    overflow: hidden;
+    margin-bottom: 8px;
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.password-strength-modal .strength-fill {
+    height: 100%;
+    transition: all 0.4s ease;
+    border-radius: 6px;
+}
+
+.password-strength-modal .strength-text {
+    font-size: 13px;
+    font-weight: 600;
+    text-align: center;
+    color: #2c3e50;
+}
+
+/* Groupe du mot de passe maître */
+.master-password-group {
+    background: linear-gradient(135deg, #fff5f5 0%, #fefefe 100%);
+    border: 2px solid #fed7d7;
+    border-radius: 16px;
+    padding: 20px;
+    margin: 24px 0;
+    position: relative;
+}
+
+.master-password-group::before {
+    content: "🔐";
+    position: absolute;
+    top: -12px;
+    left: 20px;
+    background: white;
+    padding: 0 8px;
+    font-size: 20px;
+}
+
+.master-password-group label {
+    color: #c53030 !important;
+    font-weight: 700;
+    font-size: 15px;
+}
+
+.master-password-group .form-help {
+    color: #c53030;
+    font-weight: 500;
+    margin-top: 8px;
+}
+
+.master-password-group .form-input {
+    border-color: #fed7d7;
+    background: rgba(255, 255, 255, 0.8);
+}
+
+.master-password-group .form-input:focus {
+    border-color: #e53e3e;
+    box-shadow: 0 0 0 4px rgba(229, 62, 62, 0.12);
+}
+
+/* Actions de la modal */
+.modal-actions {
+    display: flex;
+    gap: 16px;
+    justify-content: flex-end;
+    padding-top: 24px;
+    border-top: 1px solid #f0f0f0;
+    margin-top: 28px;
+    background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+    margin: 28px -28px -28px -28px;
+    padding: 24px 28px;
+    border-radius: 0 0 20px 20px;
+}
+
+.btn-secondary {
+    background: linear-gradient(135deg, #ecf0f1 0%, #d5dbdb 100%);
+    color: #2c3e50;
+    border: 2px solid #bdc3c7;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.btn-secondary:hover {
+    background: linear-gradient(135deg, #d5dbdb 0%, #bdc3c7 100%);
+    border-color: #95a5a6;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+}
+
+.modal-actions .btn {
+    min-width: 130px;
+    padding: 14px 24px;
+    font-weight: 600;
+    border-radius: 12px;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.modal-actions .btn-primary {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border: 2px solid #667eea;
+}
+
+.modal-actions .btn-primary:hover {
+    background: linear-gradient(135deg, #5a6fd8 0%, #6a4190 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+}
+
+/* Overlay pour la modal */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.4);
+    z-index: 1999;
+    backdrop-filter: blur(2px);
+}
+
+/* Responsive pour les modals */
 @media (max-width: 768px) {
-    .sidebar {
-        width: 250px;
-        transform: translateX(-100%);
-        transition: transform 0.3s ease;
+    .modal-content {
+        width: 95%;
+        margin: 10px;
+        max-height: 95vh;
     }
 
-    .sidebar.open {
-        transform: translateX(0);
+    .modal-header,
+    .password-form {
+        padding: 16px;
     }
 
-    .main-content {
-        margin-left: 0;
-        padding: 15px;
-    }
-
-    .content-header {
+    .modal-actions {
         flex-direction: column;
-        gap: 15px;
-        align-items: stretch;
     }
 
-    .passwords-table-container {
-        overflow-x: auto;
+    .modal-actions .btn {
+        width: 100%;
+        min-width: auto;
     }
 
-    .passwords-table {
-        min-width: 700px;
-    }
-}
-
-@media (max-width: 480px) {
-    .main-content {
-        padding: 10px;
+    .password-input-group .form-input {
+        padding-right: 80px;
     }
 
-    .content-header h1 {
-        font-size: 1.5rem;
+    .toggle-visibility {
+        right: 38px;
     }
 }
 
-/* Classes utilitaires */
-.text-center { text-align: center; }
-.mb-10 { margin-bottom: 10px; }
-.mb-20 { margin-bottom: 20px; }
-.mt-10 { margin-top: 10px; }
-.mt-20 { margin-top: 20px; }
-
-/* Animation pour les transitions */
-@keyframes fadeIn {
-    from { opacity: 0; transform: translateY(20px); }
-    to { opacity: 1; transform: translateY(0); }
-}
-
-.fade-in {
-    animation: fadeIn 0.3s ease-out;
-}
-
-/* Amélioration des focus pour l'accessibilité */
-.input-field:focus,
-.btn:focus,
-.tab-button:focus,
-.length-btn:focus {
+/* Améliorations pour l'accessibilité */
+.form-input:focus,
+.modal-close:focus,
+.toggle-visibility:focus,
+.generate-btn-small:focus {
     outline: 2px solid #667eea;
     outline-offset: 2px;
 }
 
-/* Dark mode support (optionnel) */
-@media (prefers-color-scheme: dark) {
-    /* Les styles dark mode peuvent être ajoutés ici si nécessaire */
+/* États de validation */
+.form-input.valid {
+    border-color: #27ae60;
+}
+
+.form-input.invalid {
+    border-color: #e74c3c;
+}
+
+/* Tags visuels */
+.tag {
+    display: inline-block;
+    background: #e3f2fd;
+    color: #1976d2;
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 12px;
+    margin: 2px 4px 2px 0;
+    font-weight: 500;
 }
