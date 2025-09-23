@@ -1,0 +1,65 @@
+# Fichiers et répertoires à exclure du contexte Docker
+
+# Environnements virtuels
+env/
+venv/
+.env/
+.venv/
+
+# Cache Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+
+# Base de données locale (sera gérée via volumes)
+*.db
+*.sqlite
+*.sqlite3
+
+# Logs
+*.log
+logs/
+
+# Sauvegardes
+backups/
+
+# Git
+.git/
+.gitignore
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Docker
+Dockerfile
+docker-compose.yml
+.dockerignore
+
+# Secrets (seront montés via secrets)
+secrets/
+
+# Documentation
+README.md
+docs/
+
+# Tests
+tests/
+test_*
+*_test.py
+
+# Sessions Flask locales
+flask_session/
+
+# Fichiers temporaires
+*.tmp
+*.temp
+.cache/
