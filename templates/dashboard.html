@@ -8,202 +8,317 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
 </head>
 <body class="dashboard-page">
-    <div class="dashboard-container">
-        <!-- Sidebar -->
-        <div class="sidebar">
-            <div class="sidebar-header">
-                <div class="logo">
-                    <div style="font-size: 2rem; color: #667eea; margin-bottom: 5px;">🔒</div>
-                    <h2>SecureVault</h2>
-                </div>
-            </div>
-
-            <nav class="sidebar-nav">
-                <ul class="nav-menu">
-                    <li class="nav-item active">
-                        <a href="/dashboard" class="nav-link">
-                            <i class="fas fa-home"></i>
-                            Tableau de bord
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a href="#" class="nav-link" id="passwords-link">
-                            <i class="fas fa-key"></i>
-                            Mes mots de passe
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a href="/password" class="nav-link">
-                            <i class="fas fa-random"></i>
-                            Générateur
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a href="#" class="nav-link">
-                            <i class="fas fa-cog"></i>
-                            Paramètres
-                        </a>
-                    </li>
-                </ul>
-            </nav>
-
-            <div class="sidebar-footer">
-                <a href="#" class="nav-link" id="logout-btn">
-                    <i class="fas fa-sign-out-alt"></i>
-                    <span>Déconnexion</span>
-                </a>
+<div class="dashboard-container">
+    <!-- Sidebar -->
+    <div class="sidebar">
+        <div class="sidebar-header">
+            <div class="logo">
+                <div style="font-size: 2rem; color: #667eea; margin-bottom: 5px;">🔒</div>
+                <h2>SecureVault</h2>
             </div>
         </div>
 
-        <!-- Main Content -->
-        <div class="main-content">
-            <div class="content-header">
-                <h1>Mes mots de passe</h1>
-                <button class="add-btn" id="add-password">
-                    <i class="fas fa-plus"></i>
-                    Ajouter un mot de passe
-                </button>
-            </div>
+        <nav class="sidebar-nav">
+            <ul class="nav-menu">
+                <li class="nav-item active">
+                    <a href="/dashboard" class="nav-link">
+                        <i class="fas fa-home"></i>
+                        Tableau de bord
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="#" class="nav-link" id="passwords-link">
+                        <i class="fas fa-key"></i>
+                        Mes mots de passe
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="/password" class="nav-link">
+                        <i class="fas fa-random"></i>
+                        Générateur
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="#" class="nav-link">
+                        <i class="fas fa-cog"></i>
+                        Paramètres
+                    </a>
+                </li>
+            </ul>
+        </nav>
 
-            <!-- Barre de recherche -->
-            <div class="search-container" style="margin-bottom: 20px;">
-                <div class="search-box">
-                    <i class="fas fa-search"></i>
-                    <input type="text" id="search-input" placeholder="Rechercher un mot de passe..." style="width: 100%; padding: 12px 15px 12px 40px; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 16px;">
-                </div>
-            </div>
-
-            <div class="passwords-container">
-                <!-- Indicateur de chargement -->
-                <div id="loading-passwords" class="loading" style="padding: 40px;">
-                    <i class="fas fa-spinner fa-spin"></i>
-                    <span>Chargement des mots de passe...</span>
-                </div>
-
-                <!-- Tableau des mots de passe -->
-                <div class="passwords-table-container" id="passwords-table" style="display: none;">
-                    <table class="passwords-table">
-                        <thead>
-                            <tr>
-                                <th>Titre</th>
-                                <th>Nom d'utilisateur</th>
-                                <th>URL</th>
-                                <th>Dernière utilisation</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody id="passwords-tbody">
-                            <!-- Les données seront chargées ici -->
-                        </tbody>
-                    </table>
-                </div>
-
-                <!-- État vide -->
-                <div class="empty-state" id="empty-state" style="display: none;">
-                    <div class="empty-icon">
-                        <i class="fas fa-lock"></i>
-                    </div>
-                    <h3>Aucun mot de passe enregistré</h3>
-                    <p>Commencez par ajouter votre premier mot de passe sécurisé</p>
-                    <button class="btn-primary" id="first-password">
-                        <i class="fas fa-plus"></i>
-                        Ajouter mon premier mot de passe
-                    </button>
-                </div>
-            </div>
+        <div class="sidebar-footer">
+            <a href="#" class="nav-link" id="logout-btn">
+                <i class="fas fa-sign-out-alt"></i>
+                <span>Déconnexion</span>
+            </a>
         </div>
     </div>
 
-    <script>
-        // Variables globales
-        let passwords = [];
-        let currentUser = null;
+    <!-- Main Content -->
+    <div class="main-content">
+        <div class="content-header">
+            <h1>Mes mots de passe</h1>
+            <button class="add-btn" id="add-password">
+                <i class="fas fa-plus"></i>
+                Ajouter un mot de passe
+            </button>
+        </div>
 
-        // Éléments DOM
-        const loadingElement = document.getElementById('loading-passwords');
-        const tableElement = document.getElementById('passwords-table');
-        const emptyStateElement = document.getElementById('empty-state');
-        const passwordsTableBody = document.getElementById('passwords-tbody');
-        const searchInput = document.getElementById('search-input');
-        const addPasswordBtn = document.getElementById('add-password');
-        const firstPasswordBtn = document.getElementById('first-password');
-        const logoutBtn = document.getElementById('logout-btn');
+        <!-- Barre de recherche -->
+        <div class="search-container" style="margin-bottom: 20px;">
+            <div class="search-box">
+                <i class="fas fa-search"></i>
+                <input type="text" id="search-input" placeholder="Rechercher un mot de passe..."
+                       style="width: 100%; padding: 12px 15px 12px 40px; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 16px;">
+            </div>
+        </div>
 
-        // Vérification de l'authentification
-        async function checkAuthentication() {
-            loadPasswords();
-        }
+        <div class="passwords-container">
+            <!-- Indicateur de chargement -->
+            <div id="loading-passwords" class="loading" style="padding: 40px;">
+                <i class="fas fa-spinner fa-spin"></i>
+                <span>Chargement des mots de passe...</span>
+            </div>
 
-        // Chargement des mots de passe
-        async function loadPasswords() {
-            try {
-                showLoading();
+            <!-- Tableau des mots de passe -->
+            <div class="passwords-table-container" id="passwords-table" style="display: none;">
+                <table class="passwords-table">
+                    <thead>
+                    <tr>
+                        <th>Titre</th>
+                        <th>Nom d'utilisateur</th>
+                        <th>URL</th>
+                        <th>Dernière utilisation</th>
+                        <th>Actions</th>
+                    </tr>
+                    </thead>
+                    <tbody id="passwords-tbody">
+                    <!-- Les données seront chargées ici -->
+                    </tbody>
+                </table>
+            </div>
 
-                const response = await fetch('/api/passwords');
+            <!-- État vide -->
+            <div class="empty-state" id="empty-state" style="display: none;">
+                <div class="empty-icon">
+                    <i class="fas fa-lock"></i>
+                </div>
+                <h3>Aucun mot de passe enregistré</h3>
+                <p>Commencez par ajouter votre premier mot de passe sécurisé</p>
+                <button class="btn-primary" id="first-password">
+                    <i class="fas fa-plus"></i>
+                    Ajouter mon premier mot de passe
+                </button>
+            </div>
 
-                if (!response.ok) {
-                    if (response.status === 401) {
-                        window.location.href = '/login';
-                        return;
-                    }
-                    throw new Error(`Erreur ${response.status}`);
+            <!-- État aucun résultat de recherche -->
+            <div class="empty-state" id="no-results-state" style="display: none;">
+                <div class="empty-icon">
+                    <i class="fas fa-search"></i>
+                </div>
+                <h3>Aucun élément ne correspond</h3>
+                <p>Aucun mot de passe ne correspond à votre recherche "<span id="search-term"></span>"</p>
+                <button class="btn-primary" onclick="clearSearch()">
+                    <i class="fas fa-times"></i>
+                    Effacer la recherche
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal pour ajouter/modifier un mot de passe -->
+<div id="password-modal" class="modal" style="display: none;">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3 id="modal-title">Ajouter un mot de passe</h3>
+            <button class="modal-close" id="close-modal">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+
+        <form id="password-form" class="password-form">
+            <div class="form-group">
+                <label for="password-title">Titre *</label>
+                <input type="text" id="password-title" class="form-input" placeholder="Ex: Gmail, Facebook, Site web..."
+                       required>
+            </div>
+
+            <div class="form-group">
+                <label for="password-url">URL (optionnel)</label>
+                <input type="url" id="password-url" class="form-input" placeholder="https://example.com">
+            </div>
+
+            <div class="form-group">
+                <label for="password-username">Nom d'utilisateur / Email</label>
+                <input type="text" id="password-username" class="form-input" placeholder="votre.email@example.com">
+            </div>
+
+            <div class="form-group">
+                <label for="password-password">Mot de passe *</label>
+                <div class="password-input-group">
+                    <input type="password" id="password-password" class="form-input" placeholder="Votre mot de passe"
+                           required>
+                    <button type="button" class="toggle-visibility" id="toggle-password-visibility">
+                        <i class="fas fa-eye"></i>
+                    </button>
+                    <button type="button" class="generate-btn-small" id="generate-password-modal">
+                        <i class="fas fa-random"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Indicateur de force du mot de passe -->
+            <div class="password-strength-modal" id="password-strength-modal" style="display: none;">
+                <div class="strength-label">Force du mot de passe:</div>
+                <div class="strength-bar">
+                    <div class="strength-fill" id="modal-strength-fill"></div>
+                </div>
+                <div class="strength-text" id="modal-strength-text"></div>
+            </div>
+
+            <div class="form-group">
+                <label for="password-notes">Notes (optionnel)</label>
+                <textarea id="password-notes" class="form-input" rows="3"
+                          placeholder="Notes ou informations supplémentaires..."></textarea>
+            </div>
+
+            <div class="form-group">
+                <label for="password-tags">Tags (optionnel)</label>
+                <input type="text" id="password-tags" class="form-input"
+                       placeholder="travail, personnel, social... (séparés par des virgules)">
+                <small class="form-help">Séparez les tags par des virgules pour organiser vos mots de passe</small>
+            </div>
+
+            <!-- Demande du mot de passe maître -->
+            <div class="form-group master-password-group">
+                <label for="master-password-modal">Mot de passe maître * (pour chiffrer)</label>
+                <input type="password" id="master-password-modal" class="form-input"
+                       placeholder="Votre mot de passe maître" required>
+                <small class="form-help">Nécessaire pour chiffrer vos données de manière sécurisée</small>
+            </div>
+
+            <div class="modal-actions">
+                <button type="button" class="btn btn-secondary" id="cancel-password">
+                    <i class="fas fa-times"></i>
+                    Annuler
+                </button>
+                <button type="submit" class="btn btn-primary" id="save-password">
+                    <i class="fas fa-save"></i>
+                    <span id="save-text">Enregistrer</span>
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Overlay pour la modal -->
+<div id="modal-overlay" class="modal-overlay" style="display: none;"></div>
+
+<script>
+    // Variables globales
+    let passwords = [];
+    let currentUser = null;
+    let editingPasswordId = null; // Pour savoir si on édite ou ajoute
+
+    // Éléments DOM
+    const loadingElement = document.getElementById('loading-passwords');
+    const tableElement = document.getElementById('passwords-table');
+    const emptyStateElement = document.getElementById('empty-state');
+    const noResultsStateElement = document.getElementById('no-results-state');
+    const passwordsTableBody = document.getElementById('passwords-tbody');
+    const searchInput = document.getElementById('search-input');
+    const addPasswordBtn = document.getElementById('add-password');
+    const firstPasswordBtn = document.getElementById('first-password');
+    const logoutBtn = document.getElementById('logout-btn');
+    const passwordModal = document.getElementById('password-modal');
+    const closeModalBtn = document.getElementById('close-modal');
+    const passwordForm = document.getElementById('password-form');
+    const savePasswordBtn = document.getElementById('save-password');
+    const cancelPasswordBtn = document.getElementById('cancel-password');
+    const passwordTitleInput = document.getElementById('password-title');
+    const passwordUrlInput = document.getElementById('password-url');
+    const passwordUsernameInput = document.getElementById('password-username');
+    const passwordPasswordInput = document.getElementById('password-password');
+    const passwordNotesInput = document.getElementById('password-notes');
+    const passwordTagsInput = document.getElementById('password-tags');
+    const masterPasswordModalInput = document.getElementById('master-password-modal');
+    const modalStrengthFill = document.getElementById('modal-strength-fill');
+    const modalStrengthText = document.getElementById('modal-strength-text');
+
+    // Vérification de l'authentification
+    async function checkAuthentication() {
+        loadPasswords();
+    }
+
+    // Chargement des mots de passe
+    async function loadPasswords() {
+        try {
+            showLoading();
+
+            const response = await fetch('/api/passwords');
+
+            if (!response.ok) {
+                if (response.status === 401) {
+                    window.location.href = '/login';
+                    return;
                 }
-
-                const data = await response.json();
-                passwords = data.passwords || [];
-
-                displayPasswords(passwords);
-
-            } catch (error) {
-                console.error('Erreur lors du chargement:', error);
-                hideLoading();
-                showError('Erreur lors du chargement des mots de passe');
+                throw new Error(`Erreur ${response.status}`);
             }
-        }
 
-        // Affichage des mots de passe
-        function displayPasswords(passwordList) {
+            const data = await response.json();
+            passwords = data.passwords || [];
+
+            displayPasswords(passwords);
+
+        } catch (error) {
+            console.error('Erreur lors du chargement:', error);
             hideLoading();
+            showError('Erreur lors du chargement des mots de passe');
+        }
+    }
 
-            if (passwordList.length === 0) {
-                showEmptyState();
-                return;
-            }
+    // Affichage des mots de passe
+    function displayPasswords(passwordList) {
+        hideLoading();
 
-            showTable();
-
-            passwordsTableBody.innerHTML = '';
-
-            passwordList.forEach(password => {
-                const row = createPasswordRow(password);
-                passwordsTableBody.appendChild(row);
-            });
+        if (passwordList.length === 0) {
+            showEmptyState();
+            return;
         }
 
-        // Création d'une ligne de mot de passe
-        function createPasswordRow(password) {
-            const row = document.createElement('tr');
-            row.className = 'password-row';
+        showTable();
 
-            const lastUsed = password.last_used ?
-                new Date(password.last_used).toLocaleDateString('fr-FR') :
-                'Jamais utilisé';
+        passwordsTableBody.innerHTML = '';
 
-            row.innerHTML = `
+        passwordList.forEach(password => {
+            const row = createPasswordRow(password);
+            passwordsTableBody.appendChild(row);
+        });
+    }
+
+    // Création d'une ligne de mot de passe
+    function createPasswordRow(password) {
+        const row = document.createElement('tr');
+        row.className = 'password-row';
+
+        const lastUsed = password.last_used ?
+            new Date(password.last_used).toLocaleDateString('fr-FR') :
+            'Jamais utilisé';
+
+        row.innerHTML = `
                 <td>
                     <strong>${escapeHtml(password.title)}</strong>
                     ${password.tags && password.tags.length > 0 ?
-                        '<div style="margin-top: 4px;">' +
-                        password.tags.map(tag => `<span style="background: #e3f2fd; color: #1976d2; padding: 2px 6px; border-radius: 4px; font-size: 12px; margin-right: 4px;">${escapeHtml(tag)}</span>`).join('') +
-                        '</div>' : ''}
+            '<div style="margin-top: 4px;">' +
+            password.tags.map(tag => `<span style="background: #e3f2fd; color: #1976d2; padding: 2px 6px; border-radius: 4px; font-size: 12px; margin-right: 4px;">${escapeHtml(tag)}</span>`).join('') +
+            '</div>' : ''}
                 </td>
                 <td>${escapeHtml(password.username || '-')}</td>
                 <td>${password.url ? `<a href="${escapeHtml(password.url)}" target="_blank" style="color: #667eea; text-decoration: none;">${escapeHtml(password.url)}</a>` : '-'}</td>
                 <td>${lastUsed}</td>
                 <td class="actions-cell">
-                    <button class="action-btn copy-btn" title="Copier le mot de passe" onclick="copyPassword(${password.id})">
-                        <i class="fas fa-copy"></i>
-                    </button>
                     <button class="action-btn edit-btn" title="Modifier" onclick="editPassword(${password.id})">
                         <i class="fas fa-edit"></i>
                     </button>
@@ -213,178 +328,447 @@
                 </td>
             `;
 
-            return row;
-        }
+        return row;
+    }
 
-        // Fonctions d'affichage
-        function showLoading() {
-            loadingElement.style.display = 'flex';
-            tableElement.style.display = 'none';
-            emptyStateElement.style.display = 'none';
-        }
+    // Fonctions d'affichage
+    function showLoading() {
+        loadingElement.style.display = 'flex';
+        tableElement.style.display = 'none';
+        emptyStateElement.style.display = 'none';
+        noResultsStateElement.style.display = 'none';
+    }
 
-        function hideLoading() {
-            loadingElement.style.display = 'none';
-        }
+    function hideLoading() {
+        loadingElement.style.display = 'none';
+    }
 
-        function showTable() {
-            tableElement.style.display = 'block';
-            emptyStateElement.style.display = 'none';
-        }
+    function showTable() {
+        tableElement.style.display = 'block';
+        emptyStateElement.style.display = 'none';
+        noResultsStateElement.style.display = 'none';
+    }
 
-        function showEmptyState() {
-            tableElement.style.display = 'none';
-            emptyStateElement.style.display = 'block';
-        }
+    function showEmptyState() {
+        tableElement.style.display = 'none';
+        emptyStateElement.style.display = 'block';
+        noResultsStateElement.style.display = 'none';
+    }
 
-        function showError(message) {
-            const notification = document.createElement('div');
-            notification.style.cssText = `
+    function showNoResultsState(searchTerm) {
+        tableElement.style.display = 'none';
+        emptyStateElement.style.display = 'none';
+        noResultsStateElement.style.display = 'block';
+        document.getElementById('search-term').textContent = searchTerm;
+    }
+
+    function showError(message) {
+        const notification = document.createElement('div');
+        notification.style.cssText = `
                 position: fixed; top: 20px; right: 20px; z-index: 1000;
                 background: #e74c3c; color: white; padding: 12px 20px;
                 border-radius: 8px; font-weight: 500;
                 box-shadow: 0 4px 12px rgba(0,0,0,0.15);
             `;
-            notification.innerHTML = `<i class="fas fa-exclamation-circle"></i> ${message}`;
-            document.body.appendChild(notification);
+        notification.innerHTML = `<i class="fas fa-exclamation-circle"></i> ${message}`;
+        document.body.appendChild(notification);
 
-            setTimeout(() => {
-                document.body.removeChild(notification);
-            }, 5000);
-        }
+        setTimeout(() => {
+            document.body.removeChild(notification);
+        }, 5000);
+    }
 
-        // Fonctions de gestion des mots de passe
-        async function copyPassword(passwordId) {
-            const masterPassword = prompt('Entrez votre mot de passe maître pour accéder à ce mot de passe :');
+    // Fonctions de gestion des mots de passe
+    async function editPassword(passwordId) {
+        try {
+            // Demander le mot de passe maître pour récupérer les données
+            const masterPassword = prompt('Entrez votre mot de passe maître pour modifier ce mot de passe :');
             if (!masterPassword) return;
 
-            try {
-                const response = await fetch(`/api/passwords/${passwordId}`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({ master_password: masterPassword })
-                });
-
-                if (!response.ok) {
-                    throw new Error('Mot de passe maître incorrect');
+            // Récupérer les données du mot de passe
+            const response = await fetch(`/api/passwords/${passwordId}`, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Master-Password': masterPassword
                 }
+            });
 
-                const data = await response.json();
-
-                await navigator.clipboard.writeText(data.password);
-                showSuccessNotification('Mot de passe copié !');
-
-            } catch (error) {
-                console.error('Erreur lors de la copie:', error);
-                showError('Erreur lors de la copie du mot de passe');
-            }
-        }
-
-        function editPassword(passwordId) {
-            alert('Fonctionnalité d\'édition à venir');
-        }
-
-        async function deletePassword(passwordId) {
-            if (!confirm('Êtes-vous sûr de vouloir supprimer ce mot de passe ?')) {
-                return;
-            }
-
-            try {
-                const response = await fetch(`/api/passwords/${passwordId}`, {
-                    method: 'DELETE'
-                });
-
-                if (!response.ok) {
-                    throw new Error('Erreur lors de la suppression');
+            if (!response.ok) {
+                if (response.status === 401) {
+                    showError('Mot de passe maître incorrect');
+                    return;
                 }
-
-                showSuccessNotification('Mot de passe supprimé !');
-                loadPasswords();
-
-            } catch (error) {
-                console.error('Erreur lors de la suppression:', error);
-                showError('Erreur lors de la suppression');
+                throw new Error('Erreur lors de la récupération du mot de passe');
             }
+
+            const passwordData = await response.json();
+
+            // Ouvrir la modal en mode édition
+            editingPasswordId = passwordId;
+            openPasswordModalForEdit(passwordData);
+
+        } catch (error) {
+            console.error('Erreur lors de l\'édition:', error);
+            showError('Erreur lors de la récupération du mot de passe');
+        }
+    }
+
+    async function deletePassword(passwordId) {
+        if (!confirm('Êtes-vous sûr de vouloir supprimer ce mot de passe ?')) {
+            return;
         }
 
-        // Déconnexion
-        async function logout() {
-            try {
-                await fetch('/api/logout', { method: 'POST' });
-                window.location.href = '/login';
-            } catch (error) {
-                console.error('Erreur lors de la déconnexion:', error);
-                window.location.href = '/login';
+        try {
+            const response = await fetch(`/api/passwords/${passwordId}`, {
+                method: 'DELETE'
+            });
+
+            if (!response.ok) {
+                throw new Error('Erreur lors de la suppression');
             }
+
+            showSuccessNotification('Mot de passe supprimé !');
+            loadPasswords();
+
+        } catch (error) {
+            console.error('Erreur lors de la suppression:', error);
+            showError('Erreur lors de la suppression');
+        }
+    }
+
+    // Déconnexion
+    async function logout() {
+        try {
+            await fetch('/api/logout', {method: 'POST'});
+            window.location.href = '/login';
+        } catch (error) {
+            console.error('Erreur lors de la déconnexion:', error);
+            window.location.href = '/login';
+        }
+    }
+
+    // Recherche
+    function filterPasswords() {
+        const searchTerm = searchInput.value.toLowerCase().trim();
+
+        if (!searchTerm) {
+            displayPasswords(passwords);
+            return;
         }
 
-        // Recherche
-        function filterPasswords() {
-            const searchTerm = searchInput.value.toLowerCase().trim();
+        const filtered = passwords.filter(password =>
+            password.title.toLowerCase().includes(searchTerm) ||
+            (password.username && password.username.toLowerCase().includes(searchTerm)) ||
+            (password.url && password.url.toLowerCase().includes(searchTerm))
+        );
 
-            if (!searchTerm) {
-                displayPasswords(passwords);
-                return;
-            }
-
-            const filtered = passwords.filter(password =>
-                password.title.toLowerCase().includes(searchTerm) ||
-                (password.username && password.username.toLowerCase().includes(searchTerm)) ||
-                (password.url && password.url.toLowerCase().includes(searchTerm))
-            );
-
+        if (filtered.length === 0) {
+            showNoResultsState(searchTerm);
+        } else {
             displayPasswords(filtered);
         }
+    }
 
-        // Utilitaires
-        function escapeHtml(text) {
-            const div = document.createElement('div');
-            div.textContent = text;
-            return div.innerHTML;
-        }
+    function clearSearch() {
+        searchInput.value = '';
+        displayPasswords(passwords);
+    }
 
-        function showSuccessNotification(message) {
-            const notification = document.createElement('div');
-            notification.style.cssText = `
+    // Utilitaires
+    function escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+
+    function showSuccessNotification(message) {
+        const notification = document.createElement('div');
+        notification.style.cssText = `
                 position: fixed; top: 20px; right: 20px; z-index: 1000;
                 background: #27ae60; color: white; padding: 12px 20px;
                 border-radius: 8px; font-weight: 500;
                 box-shadow: 0 4px 12px rgba(0,0,0,0.15);
                 opacity: 0; transform: translateX(100%); transition: all 0.3s ease;
             `;
-            notification.innerHTML = `<i class="fas fa-check-circle"></i> ${message}`;
-            document.body.appendChild(notification);
+        notification.innerHTML = `<i class="fas fa-check-circle"></i> ${message}`;
+        document.body.appendChild(notification);
 
-            setTimeout(() => {
-                notification.style.opacity = '1';
-                notification.style.transform = 'translateX(0)';
-            }, 100);
+        setTimeout(() => {
+            notification.style.opacity = '1';
+            notification.style.transform = 'translateX(0)';
+        }, 100);
 
+        setTimeout(() => {
+            notification.style.opacity = '0';
+            notification.style.transform = 'translateX(100%)';
             setTimeout(() => {
-                notification.style.opacity = '0';
-                notification.style.transform = 'translateX(100%)';
-                setTimeout(() => {
-                    document.body.removeChild(notification);
-                }, 300);
-            }, 3000);
+                document.body.removeChild(notification);
+            }, 300);
+        }, 3000);
+    }
+
+    // Gestion de la modal
+    function openPasswordModal() {
+        editingPasswordId = null; // Reset pour l'ajout
+        passwordModal.style.display = 'block';
+        document.getElementById('modal-overlay').style.display = 'block';
+        document.getElementById('modal-title').textContent = 'Ajouter un mot de passe';
+        document.getElementById('save-text').textContent = 'Enregistrer';
+        passwordForm.reset();
+        document.getElementById('password-strength-modal').style.display = 'none';
+        passwordTitleInput.focus();
+    }
+
+    function closePasswordModal() {
+        passwordModal.style.display = 'none';
+        document.getElementById('modal-overlay').style.display = 'none';
+        editingPasswordId = null; // Reset
+    }
+
+    function openPasswordModalForEdit(passwordData) {
+        passwordModal.style.display = 'block';
+        document.getElementById('modal-overlay').style.display = 'block';
+        document.getElementById('modal-title').textContent = 'Modifier le mot de passe';
+        document.getElementById('save-text').textContent = 'Mettre à jour';
+
+        // Remplir le formulaire avec les données existantes
+        passwordTitleInput.value = passwordData.title;
+        passwordUrlInput.value = passwordData.url || '';
+        passwordUsernameInput.value = passwordData.username || '';
+        passwordPasswordInput.value = passwordData.password;
+        passwordNotesInput.value = passwordData.notes || '';
+        passwordTagsInput.value = passwordData.tags ? passwordData.tags.join(', ') : '';
+        masterPasswordModalInput.value = '';
+
+        // Analyser la force du mot de passe existant
+        if (passwordData.password) {
+            analyzePasswordStrengthInModal(passwordData.password);
+        } else {
+            document.getElementById('password-strength-modal').style.display = 'none';
         }
 
-        // Event Listeners
-        searchInput.addEventListener('input', filterPasswords);
-        addPasswordBtn.addEventListener('click', () => {
-            alert('Fonctionnalité d\'ajout à venir');
-        });
-        firstPasswordBtn.addEventListener('click', () => {
-            alert('Fonctionnalité d\'ajout à venir');
-        });
-        logoutBtn.addEventListener('click', logout);
+        passwordTitleInput.focus();
+    }
 
-        // Initialisation
-        window.addEventListener('load', () => {
-            checkAuthentication();
-        });
-    </script>
+    // Basculer la visibilité du mot de passe
+    function togglePasswordVisibility() {
+        const toggleBtn = document.getElementById('toggle-password-visibility');
+        const isPassword = passwordPasswordInput.type === 'password';
+
+        passwordPasswordInput.type = isPassword ? 'text' : 'password';
+        toggleBtn.innerHTML = `<i class="fas fa-eye${isPassword ? '-slash' : ''}"></i>`;
+    }
+
+    // Générer un mot de passe dans la modal
+    async function generatePasswordInModal() {
+        try {
+            const options = {
+                length: 16,
+                use_uppercase: true,
+                use_lowercase: true,
+                use_digits: true,
+                use_special: true,
+                exclude_similar: true
+            };
+
+            const response = await fetch('/api/generate-password', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(options)
+            });
+
+            if (!response.ok) {
+                if (response.status === 401) {
+                    window.location.href = '/login';
+                    return;
+                }
+                throw new Error('Erreur lors de la génération');
+            }
+
+            const data = await response.json();
+            passwordPasswordInput.value = data.password;
+
+            // Déclencher l'analyse de force
+            analyzePasswordStrengthInModal(data.password);
+
+            showSuccessNotification('Mot de passe généré !');
+
+        } catch (error) {
+            console.error('Erreur génération:', error);
+            showError('Erreur lors de la génération du mot de passe');
+        }
+    }
+
+    // Analyser la force du mot de passe dans la modal
+    async function analyzePasswordStrengthInModal(password) {
+        const strengthContainer = document.getElementById('password-strength-modal');
+
+        if (!password) {
+            strengthContainer.style.display = 'none';
+            return;
+        }
+
+        strengthContainer.style.display = 'block';
+
+        try {
+            const response = await fetch('/api/check-password-strength', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({password: password})
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                const strength = data.strength;
+
+                modalStrengthFill.style.width = strength.score + '%';
+                modalStrengthText.textContent = `${strength.level} (${strength.score}%)`;
+
+                // Couleurs selon le niveau
+                modalStrengthFill.className = 'strength-fill';
+                if (strength.score >= 80) modalStrengthFill.classList.add('very-strong');
+                else if (strength.score >= 60) modalStrengthFill.classList.add('strong');
+                else if (strength.score >= 40) modalStrengthFill.classList.add('medium');
+                else if (strength.score >= 20) modalStrengthFill.classList.add('weak');
+                else modalStrengthFill.classList.add('very-weak');
+            }
+
+        } catch (error) {
+            console.error('Erreur analyse force:', error);
+        }
+    }
+
+    // Soumettre le formulaire d'ajout/modification de mot de passe
+    async function handlePasswordFormSubmit(event) {
+        event.preventDefault();
+
+        const formData = {
+            title: passwordTitleInput.value.trim(),
+            url: passwordUrlInput.value.trim(),
+            username: passwordUsernameInput.value.trim(),
+            password: passwordPasswordInput.value,
+            notes: passwordNotesInput.value.trim(),
+            tags: passwordTagsInput.value.split(',').map(tag => tag.trim()).filter(tag => tag),
+            master_password: masterPasswordModalInput.value
+        };
+
+        // Validation
+        if (!formData.title) {
+            showError('Le titre est requis');
+            passwordTitleInput.focus();
+            return;
+        }
+
+        if (!formData.password) {
+            showError('Le mot de passe est requis');
+            passwordPasswordInput.focus();
+            return;
+        }
+
+        if (!formData.master_password) {
+            showError('Le mot de passe maître est requis pour chiffrer vos données');
+            masterPasswordModalInput.focus();
+            return;
+        }
+
+        // Désactiver le bouton pendant l'envoi
+        savePasswordBtn.disabled = true;
+
+        try {
+            let response;
+            let successMessage;
+
+            if (editingPasswordId) {
+                // Mode édition - PUT request
+                document.getElementById('save-text').textContent = 'Mise à jour...';
+                response = await fetch(`/api/passwords/${editingPasswordId}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(formData)
+                });
+                successMessage = 'Mot de passe mis à jour avec succès !';
+            } else {
+                // Mode ajout - POST request
+                document.getElementById('save-text').textContent = 'Enregistrement...';
+                response = await fetch('/api/passwords', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(formData)
+                });
+                successMessage = 'Mot de passe ajouté avec succès !';
+            }
+
+            const data = await response.json();
+
+            if (response.ok) {
+                closePasswordModal();
+                showSuccessNotification(successMessage);
+                loadPasswords(); // Recharger la liste
+            } else {
+                showError(data.error || 'Erreur lors de l\'opération');
+            }
+
+        } catch (error) {
+            console.error('Erreur lors de l\'opération:', error);
+            showError('Erreur de communication avec le serveur');
+        } finally {
+            savePasswordBtn.disabled = false;
+            if (editingPasswordId) {
+                document.getElementById('save-text').textContent = 'Mettre à jour';
+            } else {
+                document.getElementById('save-text').textContent = 'Enregistrer';
+            }
+        }
+    }
+
+    // Event Listeners supplémentaires
+    // Event Listeners pour la modal
+    addPasswordBtn.addEventListener('click', openPasswordModal);
+    firstPasswordBtn.addEventListener('click', openPasswordModal);
+    document.getElementById('close-modal').addEventListener('click', closePasswordModal);
+    document.getElementById('modal-overlay').addEventListener('click', closePasswordModal);
+    document.getElementById('cancel-password').addEventListener('click', closePasswordModal);
+    passwordForm.addEventListener('submit', handlePasswordFormSubmit);
+    document.getElementById('toggle-password-visibility').addEventListener('click', togglePasswordVisibility);
+    document.getElementById('generate-password-modal').addEventListener('click', generatePasswordInModal);
+
+    // Analyse de force en temps réel
+    passwordPasswordInput.addEventListener('input', (e) => {
+        analyzePasswordStrengthInModal(e.target.value);
+    });
+
+    // Formatage automatique des tags
+    passwordTagsInput.addEventListener('blur', () => {
+        const tags = passwordTagsInput.value.split(',').map(tag => tag.trim()).filter(tag => tag);
+        passwordTagsInput.value = tags.join(', ');
+    });
+
+    // Échappement pour fermer la modal
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && passwordModal.style.display === 'block') {
+            closePasswordModal();
+        }
+    });
+
+    // Event Listeners existants
+    searchInput.addEventListener('input', filterPasswords);
+    addPasswordBtn.addEventListener('click', openPasswordModal);
+    firstPasswordBtn.addEventListener('click', openPasswordModal);
+    logoutBtn.addEventListener('click', logout);
+
+    // Initialisation
+    window.addEventListener('load', () => {
+        checkAuthentication();
+    });
+</script>
 </body>
 </html>
