@@ -354,3 +354,30 @@ class DatabaseManager:
                 (cutoff_date,)
             )
             conn.commit()
+
+    def get_user_info(self, user_id):
+        """Récupère les informations de l'utilisateur"""
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute('SELECT username, created_at FROM users WHERE id = ?', (user_id, ))
+            return cursor.fetchone()
+    def change_username(self, user_id, new_username):
+        """Change le nom d'utilisateur"""
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute('UPDATE users SET username = ? WHERE id = ?', (new_username, user_id))
+            conn.commit()
+    def deleteAccount(self, user_id):
+        """Supprime un compte"""
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute('DELETE FROM users WHERE id = ?', (user_id,))
+            conn.commit()
+    def change_password(self, user_id, new_password):
+        """Change le mot de passe"""
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            salt = self.crypto.generate_salt()
+            hashed_password = self.crypto.hash_master_password(new_password, salt)
+            cursor.execute('UPDATE users SET master_password_hash = ?, salt = ? WHERE id = ?', (hashed_password, salt, user_id))
+            conn.commit()

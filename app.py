@@ -153,6 +153,140 @@ def create_app(config_name='default'):
         session_manager.destroy_all_user_sessions(user_id)
         return jsonify({'message': 'Toutes les sessions ont été fermées'}), 200
 
+    @app.route('/api/user-info', methods=['GET'])
+    def get_user_info():
+        """Récupère les informations de l'utilisateur connecté"""
+        if FULL_FEATURES:
+            if not session.get('user_id'):
+                return jsonify({'error': 'Non autorisé'}), 401
+            user_id = get_current_user_id()
+            try:
+                user_info = app.db.get_user_info(user_id)
+                return jsonify({
+                    'username': user_info['username'],
+                    'last_login': user_info['last_login'],
+                    'created_at': user_info['created_at']
+                }), 200
+            except Exception as e:
+                return jsonify({'error': f'Erreur: {str(e)}'}), 500
+        else:
+            # Mode simplifié
+            if not check_auth():
+                return jsonify({'error': 'Non autorisé', 'redirect': '/login'}), 401
+            
+            # Récupère le nom d'utilisateur depuis la session
+            username = session.get('username', 'Utilisateur')
+            print(f"Mode simplifié - Username depuis session: {username}")
+            
+            return jsonify({
+                'username': username,
+                'last_login': 'Non disponible',
+                'created_at': 'Non disponible'
+            }), 200
+    
+    @app.route('/api/change-username', methods=['POST'])
+    def change_username():
+        """Change le nom d'utilisateur"""
+        data = request.get_json()
+        
+        if not data or not data.get('new_username') or not data.get('master_password'):
+            return jsonify({'error': 'Nom d\'utilisateur et mot de passe requis'}), 400
+        
+        new_username = data['new_username'].strip()
+        master_password = data['master_password']
+        
+        if len(new_username) < 3:
+            return jsonify({'error': 'Le nom d\'utilisateur doit contenir au moins 3 caractères'}), 400
+        
+        if FULL_FEATURES:
+            if not session.get('user_id'):
+                return jsonify({'error': 'Non autorisé'}), 401
+            user_id = get_current_user_id()
+            try:
+                # Récupère les infos utilisateur pour vérifier le mot de passe
+                user_info = app.db.get_user_info(user_id)
+                username = user_info['username']
+                
+                # Vérifie le mot de passe maître
+                app.db.authenticate_user(username, master_password, request.remote_addr)
+                
+                # Change le nom d'utilisateur
+                app.db.change_username(user_id, new_username)
+                
+                return jsonify({'message': 'Nom d\'utilisateur modifié avec succès'}), 200
+            except ValueError as e:
+                if 'already exists' in str(e).lower():
+                    return jsonify({'error': 'Ce nom d\'utilisateur est déjà utilisé'}), 400
+                return jsonify({'error': 'Mot de passe incorrect'}), 401
+            except Exception as e:
+                return jsonify({'error': f'Erreur: {str(e)}'}), 500
+        else:
+            # Mode simplifié
+            if not check_auth():
+                return jsonify({'error': 'Non autorisé'}), 401
+            # Simulation de changement de nom d'utilisateur
+            session['username'] = new_username
+            return jsonify({'message': 'Nom d\'utilisateur modifié avec succès'}), 200
+
+    @app.route('/api/change-master-password', methods=['POST'])
+    @login_required
+    def change_master_password():
+        """Change le mot de passe maître"""
+        data = request.get_json()
+        user_id = get_current_user_id()
+        
+        if not data or not data.get('current_password') or not data.get('new_password'):
+            return jsonify({'error': 'Mots de passe requis'}), 400
+        
+        current_password = data['current_password']
+        new_password = data['new_password']
+        
+        try:
+            # Récupère les infos utilisateur pour vérifier le mot de passe
+            user_info = app.db.get_user_info(user_id)
+            username = user_info['username']
+            
+            # Vérifie le mot de passe actuel
+            app.db.authenticate_user(username, current_password, request.remote_addr)
+            
+            # Change le mot de passe
+            app.db.change_password()
+            
+            # Déconnecte toutes les sessions
+            session_manager = SessionManager(app.db)
+            session_manager.destroy_all_user_sessions(user_id)
+            
+            return jsonify({'message': 'Mot de passe maître modifié avec succès'}), 200
+        except ValueError:
+            return jsonify({'error': 'Mot de passe actuel incorrect'}), 401
+        except Exception as e:
+            return jsonify({'error': f'Erreur: {str(e)}'}), 500
+
+    @app.route('/api/delete-account', methods=['DELETE'])
+    def delete_account():
+        """Supprime le compte utilisateur"""
+        if FULL_FEATURES:
+            if not session.get('user_id'):
+                return jsonify({'error': 'Non autorisé'}), 401
+            user_id = get_current_user_id()
+            try:
+                # Supprime le compte et toutes ses données
+                app.db.delete_account(user_id)
+                
+                # Nettoie la session
+                session.clear()
+                
+                return jsonify({'message': 'Compte supprimé avec succès'}), 200
+            except Exception as e:
+                return jsonify({'error': f'Erreur lors de la suppression: {str(e)}'}), 500
+        else:
+            # Mode simplifié
+            if not check_auth():
+                return jsonify({'error': 'Non autorisé'}), 401
+            # Simulation de suppression de compte
+            session.clear()
+            return jsonify({'message': 'Compte supprimé avec succès'}), 200
+
     # Routes de gestion des mots de passe
     @app.route('/api/passwords', methods=['GET'])
     @login_required
@@ -452,6 +586,17 @@ def create_app(config_name='default'):
             if not check_auth():
                 return redirect('/login')
         return render_template('passwords.html')
+
+    @app.route('/settings')
+    def settings_page():
+        """Page des paramètres"""
+        if FULL_FEATURES:
+            if not session.get('user_id'):
+                return redirect('/login')
+        else:
+            if not check_auth():
+                return redirect('/login')
+        return render_template('settings.html')
 
     # Gestionnaire d'erreurs
     @app.errorhandler(404)
