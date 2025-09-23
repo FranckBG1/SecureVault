@@ -1,3 +1,7 @@
+#SecureVault 
+pour avoir un rendu desktop de l'application veuillez lancer le fichier "Securevault.lnk" ou "Securevault.vbs"
+
+==================================================================================================
 Cahier des charges - Application de gestion des mots de passe
 
 1. Contexte et objectifs
