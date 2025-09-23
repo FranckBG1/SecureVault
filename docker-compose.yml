@@ -1,0 +1,88 @@
+version: '3.8'
+
+services:
+  # Service principal de l'application SecureVault
+  securevault-app:
+    build: .
+    container_name: securevault-app
+    restart: unless-stopped
+    ports:
+      - "5000:5000"
+    environment:
+      - FLASK_ENV=production
+      - DATABASE_PATH=/app/data/securevault.db
+      - SECRET_KEY_FILE=/run/secrets/flask_secret
+    volumes:
+      - vault_data:/app/data
+      - ./flask_session:/app/flask_session
+    secrets:
+      - flask_secret
+      - db_encryption_key
+    networks:
+      - vault_network
+    depends_on:
+      - backup-service
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Service de sauvegarde automatisée
+  backup-service:
+    image: alpine:latest
+    container_name: securevault-backup
+    restart: unless-stopped
+    volumes:
+      - vault_data:/data:ro
+      - vault_backups:/backups
+      - ./scripts:/scripts:ro
+    environment:
+      - BACKUP_INTERVAL=86400  # 24 heures en secondes
+    command: sh -c "while true; do sh /scripts/backup.sh; sleep $${BACKUP_INTERVAL}; done"
+    networks:
+      - vault_network
+
+  # Service de monitoring (optionnel)
+  watchtower:
+    image: containrrr/watchtower
+    container_name: securevault-watchtower
+    restart: unless-stopped
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    environment:
+      - WATCHTOWER_CLEANUP=true
+      - WATCHTOWER_SCHEDULE=0 0 2 * * *  # Vérification quotidienne à 2h du matin
+    networks:
+      - vault_network
+
+# Volumes persistants
+volumes:
+  vault_data:
+    driver: local
+    driver_opts:
+      type: none
+      device: ${PWD}/data
+      o: bind
+  vault_backups:
+    driver: local
+    driver_opts:
+      type: none
+      device: ${PWD}/backups
+      o: bind
+
+# Secrets pour la sécurité
+secrets:
+  flask_secret:
+    file: ./secrets/flask_secret.txt
+  db_encryption_key:
+    file: ./secrets/db_encryption_key.txt
+
+# Réseau interne sécurisé
+networks:
+  vault_network:
+    driver: bridge
+    internal: false
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16
