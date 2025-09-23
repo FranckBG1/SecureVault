@@ -336,6 +336,29 @@ def create_app(config_name='default'):
             'user_id': user_id
         }), 200
 
+    # Route de healthcheck pour Docker
+    @app.route('/health', methods=['GET'])
+    def health_check():
+        """Endpoint de vérification de santé pour Docker"""
+        try:
+            # Vérifier la connexion à la base de données
+            app.db.cursor.execute('SELECT 1')
+            db_status = "OK"
+        except Exception as e:
+            db_status = f"ERROR: {str(e)}"
+            return jsonify({
+                'status': 'unhealthy',
+                'database': db_status,
+                'timestamp': datetime.now().isoformat()
+            }), 503
+
+        return jsonify({
+            'status': 'healthy',
+            'database': db_status,
+            'timestamp': datetime.now().isoformat(),
+            'version': '1.0.0'
+        }), 200
+
     # Routes pour les pages web
     @app.route('/')
     def index():
