@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SecureVault - Connexion</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body class="login-page">
+    <div class="login-container">
+        <div class="login-card">
+            <div class="logo">
+                <div style="font-size: 3rem; color: #667eea; margin-bottom: 10px;">🔒</div>
+                <h1>SecureVault</h1>
+            </div>
+
+            <!-- Onglets pour basculer entre connexion et inscription -->
+            <div class="auth-tabs">
+                <button class="tab-button active" id="login-tab">Connexion</button>
+                <button class="tab-button" id="register-tab">Inscription</button>
+            </div>
+
+            <!-- Formulaire de connexion -->
+            <form id="login-form" class="auth-form">
+                <h2>Connexion</h2>
+
+                <div class="input-group">
+                    <i class="fas fa-user"></i>
+                    <input type="text" id="login-username" class="input-field" placeholder="Nom d'utilisateur" required>
+                </div>
+
+                <div class="input-group">
+                    <i class="fas fa-lock"></i>
+                    <input type="password" id="login-password" class="input-field" placeholder="Mot de passe maître" required>
+                </div>
+
+                <div class="input-group">
+                    <label class="checkbox-label remember-me">
+                        <input type="checkbox" id="remember-me">
+                        <span class="checkmark"></span>
+                        Se souvenir de moi (30 jours)
+                    </label>
+                </div>
+
+                <div class="input-group">
+                    <button type="submit" class="btn auth-btn" id="login-btn">
+                        <i class="fas fa-sign-in-alt"></i> Se connecter
+                    </button>
+                </div>
+            </form>
+
+            <!-- Formulaire d'inscription -->
+            <form id="register-form" class="auth-form" style="display: none;">
+                <h2>Créer un compte</h2>
+
+                <div class="input-group">
+                    <i class="fas fa-user"></i>
+                    <input type="text" id="register-username" class="input-field" placeholder="Nom d'utilisateur" required minlength="3">
+                </div>
+
+                <div class="input-group">
+                    <i class="fas fa-lock"></i>
+                    <input type="password" id="register-password" class="input-field" placeholder="Mot de passe maître" required minlength="8">
+                </div>
+
+                <div class="input-group">
+                    <i class="fas fa-lock"></i>
+                    <input type="password" id="register-confirm" class="input-field" placeholder="Confirmer le mot de passe" required>
+                </div>
+
+                <div class="password-strength" id="register-strength" style="display: none;">
+                    <div class="strength-label">Force du mot de passe:</div>
+                    <div class="strength-bar">
+                        <div class="strength-fill" id="register-strength-fill"></div>
+                    </div>
+                    <div class="strength-text" id="register-strength-text"></div>
+                </div>
+
+                <div class="input-group">
+                    <button type="submit" class="btn auth-btn" id="register-btn">
+                        <i class="fas fa-user-plus"></i> Créer le compte
+                    </button>
+                </div>
+            </form>
+
+            <!-- Messages d'erreur/succès -->
+            <div id="auth-messages" class="auth-messages" style="display: none;">
+                <div id="message-content" class="message-content">
+                    <i class="fas fa-info-circle"></i>
+                    <span id="message-text"></span>
+                </div>
+            </div>
+
+            <!-- Indicateur de chargement -->
+            <div id="loading" class="loading" style="display: none;">
+                <i class="fas fa-spinner fa-spin"></i>
+                <span>Connexion en cours...</span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Éléments DOM
+        const loginTab = document.getElementById('login-tab');
+        const registerTab = document.getElementById('register-tab');
+        const loginForm = document.getElementById('login-form');
+        const registerForm = document.getElementById('register-form');
+        const authMessages = document.getElementById('auth-messages');
+        const messageContent = document.getElementById('message-content');
+        const messageText = document.getElementById('message-text');
+        const loading = document.getElementById('loading');
+
+        // Éléments du formulaire de connexion
+        const loginUsername = document.getElementById('login-username');
+        const loginPassword = document.getElementById('login-password');
+        const rememberMe = document.getElementById('remember-me');
+        const loginBtn = document.getElementById('login-btn');
+
+        // Éléments du formulaire d'inscription
+        const registerUsername = document.getElementById('register-username');
+        const registerPassword = document.getElementById('register-password');
+        const registerConfirm = document.getElementById('register-confirm');
+        const registerBtn = document.getElementById('register-btn');
+        const registerStrength = document.getElementById('register-strength');
+        const registerStrengthFill = document.getElementById('register-strength-fill');
+        const registerStrengthText = document.getElementById('register-strength-text');
+
+        // Gestion des onglets
+        function switchTab(tabName) {
+            if (tabName === 'login') {
+                loginTab.classList.add('active');
+                registerTab.classList.remove('active');
+                loginForm.style.display = 'block';
+                registerForm.style.display = 'none';
+            } else {
+                registerTab.classList.add('active');
+                loginTab.classList.remove('active');
+                loginForm.style.display = 'none';
+                registerForm.style.display = 'block';
+            }
+            hideMessage();
+        }
+
+        // Affichage des messages
+        function showMessage(text, type = 'info') {
+            messageText.textContent = text;
+            messageContent.className = `message-content ${type}`;
+            authMessages.style.display = 'block';
+
+            // Cache automatiquement après 5 secondes pour les succès
+            if (type === 'success') {
+                setTimeout(hideMessage, 5000);
+            }
+        }
+
+        function hideMessage() {
+            authMessages.style.display = 'none';
+        }
+
+        // Gestion du chargement
+        function showLoading(text = 'Chargement...') {
+            loading.querySelector('span').textContent = text;
+            loading.style.display = 'flex';
+        }
+
+        function hideLoading() {
+            loading.style.display = 'none';
+        }
+
+        // Validation du mot de passe pour l'inscription
+        async function checkPasswordStrength(password) {
+            if (!password) {
+                registerStrength.style.display = 'none';
+                return;
+            }
+
+            registerStrength.style.display = 'block';
+
+            try {
+                // Analyse locale basique
+                let score = 0;
+                let level = 'Très faible';
+
+                if (password.length >= 8) score += 25;
+                if (password.length >= 12) score += 15;
+                if (/[a-z]/.test(password)) score += 15;
+                if (/[A-Z]/.test(password)) score += 15;
+                if (/[0-9]/.test(password)) score += 15;
+                if (/[^a-zA-Z0-9]/.test(password)) score += 15;
+
+                if (score >= 80) level = 'Très fort';
+                else if (score >= 60) level = 'Fort';
+                else if (score >= 40) level = 'Moyen';
+                else if (score >= 20) level = 'Faible';
+
+                registerStrengthFill.style.width = score + '%';
+                registerStrengthText.textContent = `${level} (${score}%)`;
+
+                // Couleurs
+                registerStrengthFill.className = 'strength-fill';
+                if (score >= 80) registerStrengthFill.classList.add('very-strong');
+                else if (score >= 60) registerStrengthFill.classList.add('strong');
+                else if (score >= 40) registerStrengthFill.classList.add('medium');
+                else if (score >= 20) registerStrengthFill.classList.add('weak');
+                else registerStrengthFill.classList.add('very-weak');
+
+            } catch (error) {
+                console.error('Erreur analyse mot de passe:', error);
+            }
+        }
+
+        // Connexion
+        async function handleLogin(event) {
+            event.preventDefault();
+            hideMessage();
+
+            const username = loginUsername.value.trim();
+            const password = loginPassword.value;
+            const remember = rememberMe.checked;
+
+            if (!username || !password) {
+                showMessage('Veuillez remplir tous les champs', 'error');
+                return;
+            }
+
+            showLoading('Connexion en cours...');
+            loginBtn.disabled = true;
+
+            try {
+                const response = await fetch('/api/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        username: username,
+                        master_password: password,
+                        remember_me: remember
+                    })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    showMessage('Connexion réussie ! Redirection...', 'success');
+                    setTimeout(() => {
+                        window.location.href = '/dashboard';
+                    }, 1000);
+                } else {
+                    showMessage(data.error || 'Erreur de connexion', 'error');
+                }
+            } catch (error) {
+                console.error('Erreur de connexion:', error);
+                showMessage('Erreur de communication avec le serveur', 'error');
+            } finally {
+                hideLoading();
+                loginBtn.disabled = false;
+            }
+        }
+
+        // Inscription
+        async function handleRegister(event) {
+            event.preventDefault();
+            hideMessage();
+
+            const username = registerUsername.value.trim();
+            const password = registerPassword.value;
+            const confirmPassword = registerConfirm.value;
+
+            // Validations
+            if (!username || !password || !confirmPassword) {
+                showMessage('Veuillez remplir tous les champs', 'error');
+                return;
+            }
+
+            if (username.length < 3) {
+                showMessage('Le nom d\'utilisateur doit contenir au moins 3 caractères', 'error');
+                return;
+            }
+
+            if (password.length < 8) {
+                showMessage('Le mot de passe doit contenir au moins 8 caractères', 'error');
+                return;
+            }
+
+            if (password !== confirmPassword) {
+                showMessage('Les mots de passe ne correspondent pas', 'error');
+                return;
+            }
+
+            showLoading('Création du compte...');
+            registerBtn.disabled = true;
+
+            try {
+                const response = await fetch('/api/register', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        username: username,
+                        master_password: password
+                    })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    showMessage('Compte créé avec succès ! Vous pouvez maintenant vous connecter.', 'success');
+                    // Bascule vers la connexion
+                    setTimeout(() => {
+                        switchTab('login');
+                        loginUsername.value = username;
+                    }, 2000);
+                } else {
+                    showMessage(data.error || 'Erreur lors de la création du compte', 'error');
+                }
+            } catch (error) {
+                console.error('Erreur d\'inscription:', error);
+                showMessage('Erreur de communication avec le serveur', 'error');
+            } finally {
+                hideLoading();
+                registerBtn.disabled = false;
+            }
+        }
+
+        // Event Listeners
+        loginTab.addEventListener('click', () => switchTab('login'));
+        registerTab.addEventListener('click', () => switchTab('register'));
+        loginForm.addEventListener('submit', handleLogin);
+        registerForm.addEventListener('submit', handleRegister);
+
+        // Analyse de force du mot de passe en temps réel
+        registerPassword.addEventListener('input', (e) => {
+            checkPasswordStrength(e.target.value);
+        });
+
+        // Validation des mots de passe identiques
+        registerConfirm.addEventListener('input', () => {
+            if (registerPassword.value && registerConfirm.value) {
+                if (registerPassword.value !== registerConfirm.value) {
+                    registerConfirm.setCustomValidity('Les mots de passe ne correspondent pas');
+                } else {
+                    registerConfirm.setCustomValidity('');
+                }
+            }
+        });
+
+        // Focus automatique
+        window.addEventListener('load', () => {
+            loginUsername.focus();
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,750 @@
+/* Styles principaux de l'application */
+
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: #f5f5f5;
+}
+
+/* Styles spécifiques pour la page de login */
+body.login-page {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: linear-gradient(rgba(102, 126, 234, 0.8), rgba(118, 75, 162, 0.8)) fixed center;
+    height: 100vh;
+    margin: 0;
+    padding: 0;
+    display: flex;
+}
+
+/* Styles pour l'authentification */
+.login-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    min-height: 100vh;
+    padding: 20px;
+}
+
+.login-card {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+    padding: 40px;
+    width: 100%;
+    max-width: 450px;
+    text-align: center;
+}
+
+.logo h1 {
+    color: #333;
+    margin: 10px 0 30px;
+    font-weight: 300;
+    font-size: 2rem;
+}
+
+/* Styles pour les onglets d'authentification */
+.auth-tabs {
+    display: flex;
+    margin-bottom: 20px;
+    border-bottom: 2px solid #f0f0f0;
+}
+
+.tab-button {
+    flex: 1;
+    padding: 12px;
+    border: none;
+    background: none;
+    cursor: pointer;
+    font-weight: 500;
+    color: #666;
+    transition: all 0.3s ease;
+}
+
+.tab-button.active {
+    color: #667eea;
+    border-bottom: 2px solid #667eea;
+}
+
+.tab-button:hover {
+    color: #667eea;
+}
+
+/* Styles pour les formulaires d'authentification */
+.auth-form h2 {
+    color: #333;
+    margin-bottom: 25px;
+    font-weight: 500;
+}
+
+.input-group {
+    position: relative;
+    margin-bottom: 20px;
+    text-align: left;
+}
+
+.input-group i {
+    position: absolute;
+    left: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #999;
+    font-size: 16px;
+}
+
+.input-field {
+    width: 100%;
+    padding: 15px 15px 15px 45px;
+    border: 2px solid #e0e0e0;
+    border-radius: 8px;
+    font-size: 16px;
+    transition: all 0.3s ease;
+    box-sizing: border-box;
+}
+
+.input-field:focus {
+    outline: none;
+    border-color: #667eea;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.btn {
+    width: 100%;
+    padding: 15px;
+    background: #667eea;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.btn:hover {
+    background: #5a6fd8;
+    transform: translateY(-1px);
+}
+
+.btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+}
+
+/* Styles pour les messages d'authentification */
+.auth-messages {
+    margin: 15px 0;
+    padding: 12px;
+    border-radius: 8px;
+    font-size: 14px;
+}
+
+.message-content.error {
+    background: #fee;
+    color: #c33;
+    border: 1px solid #fcc;
+}
+
+.message-content.success {
+    background: #efe;
+    color: #363;
+    border: 1px solid #cfc;
+}
+
+.message-content.info {
+    background: #eef;
+    color: #336;
+    border: 1px solid #ccf;
+}
+
+/* Styles pour le chargement */
+.loading {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    color: #667eea;
+    font-weight: 500;
+}
+
+.loading i {
+    margin-right: 10px;
+    font-size: 18px;
+}
+
+/* Styles pour la case à cocher "Se souvenir de moi" */
+.checkbox-label {
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    font-size: 14px;
+    color: #666;
+    margin: 10px 0;
+}
+
+.checkbox-label input[type="checkbox"] {
+    margin-right: 8px;
+}
+
+.remember-me {
+    font-size: 14px;
+    color: #666;
+    margin: 10px 0;
+}
+
+/* Styles pour la force du mot de passe */
+.password-strength {
+    margin: 10px 0;
+}
+
+.strength-label {
+    font-size: 12px;
+    color: #666;
+    margin-bottom: 5px;
+}
+
+.strength-bar {
+    width: 100%;
+    height: 8px;
+    background: #f0f0f0;
+    border-radius: 4px;
+    overflow: hidden;
+    margin: 5px 0;
+}
+
+.strength-fill {
+    height: 100%;
+    transition: all 0.3s ease;
+    border-radius: 4px;
+    width: 0%;
+}
+
+.strength-text {
+    font-size: 12px;
+    color: #666;
+    text-align: center;
+    margin-top: 5px;
+}
+
+/* Classes de couleur pour la force des mots de passe */
+.strength-fill.very-weak { background: #ff4444; }
+.strength-fill.weak { background: #ff8800; }
+.strength-fill.medium { background: #ffbb33; }
+.strength-fill.strong { background: #88cc00; }
+.strength-fill.very-strong { background: #00aa00; }
+
+/* Styles pour le générateur de mots de passe */
+body.password-page {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    min-height: 100vh;
+    margin: 0;
+    padding: 20px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.password-container {
+    width: 100%;
+    max-width: 500px;
+}
+
+.password-card {
+    background: white;
+    border-radius: 16px;
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+    padding: 40px;
+    text-align: center;
+}
+
+.password-options {
+    text-align: left;
+    margin: 30px 0;
+}
+
+.option-group {
+    margin-bottom: 15px;
+}
+
+.checkbox-label {
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    font-size: 14px;
+    color: #444;
+    transition: color 0.3s ease;
+}
+
+.checkbox-label:hover {
+    color: #667eea;
+}
+
+.checkbox-label input[type="checkbox"] {
+    margin-right: 12px;
+    transform: scale(1.1);
+}
+
+.length-group {
+    margin: 20px 0;
+    text-align: center;
+}
+
+.length-group label {
+    display: block;
+    margin-bottom: 10px;
+    font-weight: 500;
+    color: #444;
+}
+
+.length-controls {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 15px;
+}
+
+.length-btn {
+    width: 40px;
+    height: 40px;
+    border: 2px solid #667eea;
+    background: white;
+    color: #667eea;
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 18px;
+    font-weight: bold;
+    transition: all 0.3s ease;
+}
+
+.length-btn:hover {
+    background: #667eea;
+    color: white;
+}
+
+.length-display {
+    font-size: 24px;
+    font-weight: bold;
+    color: #333;
+    min-width: 40px;
+}
+
+.password-result {
+    margin: 25px 0;
+}
+
+.password-display {
+    width: 100%;
+    padding: 15px;
+    border: 2px solid #e0e0e0;
+    border-radius: 8px;
+    font-family: 'Courier New', monospace;
+    font-size: 16px;
+    text-align: center;
+    background: #f8f9fa;
+    color: #333;
+    box-sizing: border-box;
+}
+
+.strength-meter {
+    margin: 20px 0;
+}
+
+.button-group {
+    display: flex;
+    gap: 10px;
+    margin-top: 25px;
+}
+
+.button-group .btn {
+    flex: 1;
+    padding: 12px;
+    border-radius: 8px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+.generate-btn {
+    background: #667eea;
+}
+
+.generate-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+}
+
+.copy-btn {
+    background: #28a745;
+}
+
+.copy-btn:hover {
+    background: #218838;
+}
+
+.done-btn {
+    background: #6c757d;
+}
+
+.done-btn:hover {
+    background: #5a6268;
+}
+
+/* Styles pour les notifications */
+.copy-notification {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background: #4CAF50;
+    color: white;
+    padding: 12px 20px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 500;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    z-index: 1000;
+    opacity: 0;
+    transform: translateX(100%);
+    transition: all 0.3s ease;
+}
+
+.copy-notification.show {
+    opacity: 1;
+    transform: translateX(0);
+}
+
+.copy-notification i {
+    margin-right: 8px;
+}
+
+/* Styles pour le dashboard */
+body.dashboard-page {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: #f8f9fa;
+    margin: 0;
+    padding: 0;
+}
+
+.dashboard-container {
+    display: flex;
+    min-height: 100vh;
+}
+
+/* Sidebar */
+.sidebar {
+    width: 280px;
+    background: #2c3e50;
+    color: white;
+    position: fixed;
+    height: 100vh;
+    overflow-y: auto;
+    z-index: 1000;
+}
+
+.sidebar-header {
+    padding: 20px;
+    border-bottom: 1px solid #34495e;
+}
+
+.sidebar-header .logo h2 {
+    color: white;
+    margin: 10px 0 0;
+    font-weight: 300;
+    font-size: 1.5rem;
+}
+
+.sidebar-nav {
+    padding: 20px 0;
+}
+
+.nav-menu {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.nav-item {
+    margin: 5px 0;
+}
+
+.nav-link {
+    display: flex;
+    align-items: center;
+    padding: 12px 20px;
+    color: #bdc3c7;
+    text-decoration: none;
+    transition: all 0.3s ease;
+}
+
+.nav-link:hover {
+    background: #34495e;
+    color: white;
+}
+
+.nav-item.active .nav-link {
+    background: #667eea;
+    color: white;
+}
+
+.nav-link i {
+    margin-right: 12px;
+    width: 20px;
+    text-align: center;
+}
+
+.sidebar-footer {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding: 20px;
+    border-top: 1px solid #34495e;
+}
+
+.sidebar-footer .nav-link {
+    color: #e74c3c;
+    justify-content: center;
+}
+
+.sidebar-footer .nav-link:hover {
+    background: #e74c3c;
+    color: white;
+}
+
+/* Main content */
+.main-content {
+    flex: 1;
+    margin-left: 280px;
+    padding: 20px;
+    min-height: 100vh;
+}
+
+.content-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30px;
+    padding-bottom: 20px;
+    border-bottom: 2px solid #ecf0f1;
+}
+
+.content-header h1 {
+    color: #2c3e50;
+    font-weight: 300;
+    margin: 0;
+}
+
+.add-btn {
+    background: #667eea;
+    color: white;
+    border: none;
+    padding: 12px 20px;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.add-btn:hover {
+    background: #5a6fd8;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+}
+
+/* Table des mots de passe */
+.passwords-table-container {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    overflow: hidden;
+}
+
+.passwords-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.passwords-table thead {
+    background: #f8f9fa;
+}
+
+.passwords-table th {
+    padding: 16px;
+    text-align: left;
+    font-weight: 600;
+    color: #2c3e50;
+    border-bottom: 2px solid #ecf0f1;
+}
+
+.passwords-table td {
+    padding: 16px;
+    border-bottom: 1px solid #ecf0f1;
+    vertical-align: middle;
+}
+
+.password-row:hover {
+    background: #f8f9fa;
+}
+
+.password-cell {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.password-hidden {
+    font-family: monospace;
+    letter-spacing: 2px;
+}
+
+.toggle-password, .action-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 8px;
+    border-radius: 6px;
+    transition: all 0.3s ease;
+}
+
+.toggle-password:hover {
+    background: #ecf0f1;
+}
+
+.actions-cell {
+    display: flex;
+    gap: 5px;
+}
+
+.action-btn {
+    color: #7f8c8d;
+}
+
+.action-btn:hover {
+    background: #ecf0f1;
+}
+
+.edit-btn:hover { color: #3498db; }
+.copy-btn:hover { color: #27ae60; }
+.delete-btn:hover { color: #e74c3c; }
+
+/* État vide */
+.empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+}
+
+.empty-icon {
+    font-size: 4rem;
+    color: #bdc3c7;
+    margin-bottom: 20px;
+}
+
+.empty-state h3 {
+    color: #2c3e50;
+    margin-bottom: 10px;
+}
+
+.empty-state p {
+    color: #7f8c8d;
+    margin-bottom: 30px;
+}
+
+.btn-primary {
+    background: #667eea;
+    color: white;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.btn-primary:hover {
+    background: #5a6fd8;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+}
+
+/* Responsive design pour le dashboard */
+@media (max-width: 768px) {
+    .sidebar {
+        width: 250px;
+        transform: translateX(-100%);
+        transition: transform 0.3s ease;
+    }
+
+    .sidebar.open {
+        transform: translateX(0);
+    }
+
+    .main-content {
+        margin-left: 0;
+        padding: 15px;
+    }
+
+    .content-header {
+        flex-direction: column;
+        gap: 15px;
+        align-items: stretch;
+    }
+
+    .passwords-table-container {
+        overflow-x: auto;
+    }
+
+    .passwords-table {
+        min-width: 700px;
+    }
+}
+
+@media (max-width: 480px) {
+    .main-content {
+        padding: 10px;
+    }
+
+    .content-header h1 {
+        font-size: 1.5rem;
+    }
+}
+
+/* Classes utilitaires */
+.text-center { text-align: center; }
+.mb-10 { margin-bottom: 10px; }
+.mb-20 { margin-bottom: 20px; }
+.mt-10 { margin-top: 10px; }
+.mt-20 { margin-top: 20px; }
+
+/* Animation pour les transitions */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.fade-in {
+    animation: fadeIn 0.3s ease-out;
+}
+
+/* Amélioration des focus pour l'accessibilité */
+.input-field:focus,
+.btn:focus,
+.tab-button:focus,
+.length-btn:focus {
+    outline: 2px solid #667eea;
+    outline-offset: 2px;
+}
+
+/* Dark mode support (optionnel) */
+@media (prefers-color-scheme: dark) {
+    /* Les styles dark mode peuvent être ajoutés ici si nécessaire */
+}
