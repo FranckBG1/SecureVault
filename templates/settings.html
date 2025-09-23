@@ -46,8 +46,10 @@
                 <p>Temps d'inactivité avant verrouillage automatique</p>
             </div>
             <select class="form-input" id="auto-lock-time" style="width: 150px;">
-                <option value="5">5 minutes</option>
-                <option value="15" selected>15 minutes</option>
+                <option value="0.5">30 secondes</option>
+                <option value="1">1 minute</option>
+                <option value="5" selected>5 minutes</option>
+                <option value="15">15 minutes</option>
                 <option value="30">30 minutes</option>
                 <option value="60">1 heure</option>
                 <option value="0">Jamais</option>
@@ -68,7 +70,7 @@
 
     <!-- Section Suppression de compte -->
     <div class="settings-section danger-zone">
-        <h2><i class="fas fa-exclamation-triangle"></i> Zone de danger</h2>
+
         
         <div class="setting-item">
             <div class="setting-info">
@@ -161,10 +163,14 @@ const changeUsernameForm = document.getElementById('change-username-form');
 const changePasswordModal = document.getElementById('change-password-modal');
 const changePasswordForm = document.getElementById('change-password-form');
 
+// Variables locales pour les paramètres
+let settingsAutoLockTimeout = 5; // en minutes
+
 // Initialisation
 document.addEventListener('DOMContentLoaded', function() {
     loadUserInfo();
     loadSettings();
+    initAutoLock();
 });
 
 // Chargement des informations utilisateur
@@ -179,7 +185,8 @@ async function loadUserInfo() {
             console.log('Données reçues:', data);
             const usernameElement = document.getElementById('username-display');
             if (usernameElement) {
-                usernameElement.textContent = data.username || 'Utilisateur';
+                // Protection XSS: utilise textContent au lieu de innerHTML
+                usernameElement.textContent = (data.username || 'Utilisateur').replace(/[<>"'&]/g, '');
                 console.log('Nom d\'utilisateur affiché:', data.username);
             }
         } else {
@@ -198,15 +205,71 @@ async function loadUserInfo() {
 }
 
 // Chargement des paramètres
-function loadSettings() {
-    const autoLockTime = localStorage.getItem('autoLockTime') || '15';
-    autoLockSelect.value = autoLockTime;
+async function loadSettings() {
+    try {
+        const response = await fetch('/api/settings/auto-lock');
+        if (response.ok) {
+            const data = await response.json();
+            autoLockSelect.value = data.timeout.toString();
+            settingsAutoLockTimeout = data.timeout;
+        } else {
+            // Fallback sur localStorage
+            const autoLockTime = localStorage.getItem('autoLockTime') || '5';
+            autoLockSelect.value = autoLockTime;
+            settingsAutoLockTimeout = parseFloat(autoLockTime);
+        }
+    } catch (error) {
+        console.error('Erreur lors du chargement des paramètres:', error);
+        const autoLockTime = localStorage.getItem('autoLockTime') || '5';
+        autoLockSelect.value = autoLockTime;
+        settingsAutoLockTimeout = parseFloat(autoLockTime);
+    }
 }
 
 // Sauvegarde des paramètres
-autoLockSelect.addEventListener('change', function() {
-    localStorage.setItem('autoLockTime', this.value);
-    showNotification('Paramètres sauvegardés', 'success');
+autoLockSelect.addEventListener('change', async function() {
+    const timeout = parseFloat(this.value);
+    
+    try {
+        const response = await fetch('/api/settings/auto-lock', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ timeout: timeout })
+        });
+        
+        if (response.ok) {
+            localStorage.setItem('autoLockTime', this.value);
+            
+            // Met à jour le timer côté client (variable globale du layout)
+            if (typeof window.updateAutoLockTimeout === 'function') {
+                window.updateAutoLockTimeout(timeout);
+            } else {
+                // Fallback: met à jour la variable globale directement
+                if (typeof window.autoLockTimeout !== 'undefined') {
+                    window.autoLockTimeout = timeout;
+                    window.lastActivity = Date.now();
+                }
+            }
+            
+            let message = 'Paramètres sauvegardés';
+            if (timeout === 0.5) message += ' - Verrouillage dans 30 secondes';
+            else if (timeout === 1) message += ' - Verrouillage dans 1 minute';
+            else if (timeout === 0) message += ' - Verrouillage automatique désactivé';
+            else message += ` - Verrouillage dans ${timeout} minute${timeout > 1 ? 's' : ''}`;
+            
+            showNotification(message, 'success');
+        } else {
+            showNotification('Erreur lors de la sauvegarde', 'error');
+        }
+    } catch (error) {
+        console.error('Erreur:', error);
+        // Fallback sur localStorage
+        localStorage.setItem('autoLockTime', this.value);
+        updateAutoLockTimeout(timeout);
+        showNotification('Paramètres sauvegardés localement', 'warning');
+    }
 });
 
 // Changement nom d'utilisateur
@@ -371,5 +434,17 @@ function showNotification(message, type) {
     document.body.appendChild(notification);
     setTimeout(() => notification.remove(), 3000);
 }
+
+// Expose les variables globales pour la communication avec le layout
+window.updateAutoLockTimeout = function(newTimeout) {
+    if (typeof window.autoLockTimeout !== 'undefined') {
+        window.autoLockTimeout = newTimeout;
+        window.lastActivity = Date.now();
+        // Redémarre le timer global
+        if (typeof window.startLockTimer === 'function') {
+            window.startLockTimer();
+        }
+    }
+};
 </script>
 {% endblock %}
