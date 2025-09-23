@@ -12,10 +12,46 @@ from flask_wtf import FlaskForm
 from wtforms import StringField, PasswordField, SubmitField
 from wtforms.validators import DataRequired
 
-from auth import SessionManager, login_required, get_current_user_id, require_master_password
-from config import config
-from crypto_utils import PasswordGenerator, CryptoManager
-from database import DatabaseManager
+# Imports conditionnels pour éviter les erreurs
+try:
+    from auth import SessionManager, login_required, get_current_user_id, require_master_password
+    from config import config
+    from crypto_utils import PasswordGenerator, CryptoManager
+    from database import DatabaseManager
+    FULL_FEATURES = True
+except ImportError:
+    FULL_FEATURES = False
+    print("⚠️ Modules avancés non disponibles, mode simplifié activé")
+    
+    # Fonction simple de vérification d'authentification
+    def check_auth():
+        """Vérifie si l'utilisateur est connecté"""
+        return session.get('logged_in', False)
+    
+    def login_required_simple(f):
+        """Décorateur simple pour l'authentification"""
+        from functools import wraps
+        @wraps(f)
+        def decorated_function(*args, **kwargs):
+            if not check_auth():
+                if request.path.startswith('/api/'):
+                    return jsonify({'error': 'Non autorisé', 'redirect': '/login'}), 401
+                return redirect('/login')
+            return f(*args, **kwargs)
+        return decorated_function
+    
+    def login_required_page(f):
+        """Décorateur pour les pages web - redirige directement"""
+        from functools import wraps
+        @wraps(f)
+        def decorated_function(*args, **kwargs):
+            if not check_auth():
+                return redirect('/login')
+            return f(*args, **kwargs)
+        return decorated_function
+    
+    login_required = login_required_simple
+
 
 
 class LoginForm(FlaskForm):
@@ -360,19 +396,38 @@ def create_app(config_name='default'):
         return render_template('login.html', form=form)
 
     @app.route('/dashboard')
-    @login_required
     def dashboard_page():
         """Page du tableau de bord - Protégée par authentification"""
+        if FULL_FEATURES:
+            # Utilise le décorateur avancé si disponible
+            if not session.get('user_id'):
+                return redirect('/login')
+        else:
+            # Mode simplifié
+            if not check_auth():
+                return redirect('/login')
         return render_template('dashboard.html')
 
     @app.route('/password')  # Corrigé pour correspondre aux liens du template
     def password_page():
         """Page du générateur de mots de passe"""
+        if FULL_FEATURES:
+            if not session.get('user_id'):
+                return redirect('/login')
+        else:
+            if not check_auth():
+                return redirect('/login')
         return render_template('password.html')
 
     @app.route('/passwords')  # Garde cette route pour la cohérence
     def passwords_page():
         """Page de gestion des mots de passe"""
+        if FULL_FEATURES:
+            if not session.get('user_id'):
+                return redirect('/login')
+        else:
+            if not check_auth():
+                return redirect('/login')
         return render_template('passwords.html')
 
     # Gestionnaire d'erreurs
@@ -383,6 +438,14 @@ def create_app(config_name='default'):
     @app.errorhandler(500)
     def internal_error(error):
         return jsonify({'error': 'Erreur interne du serveur'}), 500
+
+    @app.errorhandler(401)
+    def unauthorized(error):
+        # Pour les requêtes API, retourne JSON avec redirection
+        if request.path.startswith('/api/'):
+            return jsonify({'error': 'Non autorisé', 'redirect': '/login'}), 401
+        # Pour les pages web, redirige directement
+        return redirect('/login')
 
     # Configuration initiale de l'application
     with app.app_context():
