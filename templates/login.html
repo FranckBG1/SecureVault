@@ -42,7 +42,7 @@
                     <label class="checkbox-label remember-me">
                         <input type="checkbox" id="remember-me">
                         <span class="checkmark"></span>
-                        Se souvenir de moi (30 jours)
+
                     </label>
                 </div>
 
@@ -219,6 +219,75 @@
             }
         }
 
+        // Variables pour le système de blocage
+        let blockTimer = null;
+        let timeRemaining = 0;
+
+        // Fonction pour démarrer le décompte
+        function startBlockCountdown(seconds) {
+            timeRemaining = seconds;
+            loginBtn.disabled = true;
+            
+            // Efface le timer précédent s'il existe
+            if (blockTimer) {
+                clearInterval(blockTimer);
+            }
+            
+            // Met à jour l'affichage immédiatement
+            updateBlockMessage();
+            
+            // Démarre le décompte
+            blockTimer = setInterval(() => {
+                timeRemaining--;
+                
+                if (timeRemaining <= 0) {
+                    // Temps écoulé, réactive le bouton et cache le message
+                    clearInterval(blockTimer);
+                    blockTimer = null;
+                    loginBtn.disabled = false;
+                    hideMessage();
+                } else {
+                    // Met à jour l'affichage
+                    updateBlockMessage();
+                }
+            }, 1000);
+        }
+        
+        // Met à jour le message de blocage avec le temps restant
+        function updateBlockMessage() {
+            if (timeRemaining > 0) {
+                let timeText;
+                if (timeRemaining >= 3600) {
+                    // Affichage en heures et minutes
+                    const hours = Math.floor(timeRemaining / 3600);
+                    const minutes = Math.floor((timeRemaining % 3600) / 60);
+                    const seconds = timeRemaining % 60;
+                    
+                    if (hours > 0 && minutes > 0) {
+                        timeText = `${hours}h ${minutes}min ${seconds}s`;
+                    } else if (hours > 0) {
+                        timeText = `${hours}h ${seconds}s`;
+                    } else {
+                        timeText = `${minutes}min ${seconds}s`;
+                    }
+                } else if (timeRemaining >= 60) {
+                    // Affichage en minutes et secondes
+                    const minutes = Math.floor(timeRemaining / 60);
+                    const seconds = timeRemaining % 60;
+                    timeText = `${minutes}min ${seconds}s`;
+                } else {
+                    // Affichage en secondes seulement
+                    timeText = `${timeRemaining} seconde${timeRemaining > 1 ? 's' : ''}`;
+                }
+                
+                const message = timeRemaining >= 3600 
+                    ? `Trop de tentatives répétées. Accès bloqué pendant ${timeText}.`
+                    : `Trop de tentatives de connexion. Veuillez patienter ${timeText} avant de réessayer.`;
+                    
+                showMessage(message, 'error');
+            }
+        }
+
         // Connexion
         async function handleLogin(event) {
             event.preventDefault();
@@ -230,6 +299,12 @@
 
             if (!username || !password) {
                 showMessage('Veuillez remplir tous les champs', 'error');
+                return;
+            }
+
+            // Si un blocage est en cours, ne pas permettre la connexion
+            if (timeRemaining > 0) {
+                updateBlockMessage();
                 return;
             }
 
@@ -257,14 +332,24 @@
                         window.location.href = '/dashboard';
                     }, 1000);
                 } else {
-                    showMessage(data.error || 'Erreur de connexion', 'error');
+                    // Vérifie si c'est un blocage temporaire
+                    if (data.blocked && data.time_remaining) {
+                        startBlockCountdown(data.time_remaining);
+                        // Affiche un message spécial pour les blocages longs
+                        if (data.is_long_block) {
+                            console.log('Blocage long détecté - accès restreint pour 1 heure');
+                        }
+                    } else {
+                        showMessage(data.error || 'Erreur de connexion', 'error');
+                        loginBtn.disabled = false;
+                    }
                 }
             } catch (error) {
                 console.error('Erreur de connexion:', error);
                 showMessage('Erreur de communication avec le serveur', 'error');
+                loginBtn.disabled = false;
             } finally {
                 hideLoading();
-                loginBtn.disabled = false;
             }
         }
 
@@ -367,6 +452,13 @@
         // Focus automatique
         window.addEventListener('load', () => {
             loginUsername.focus();
+        });
+        
+        // Nettoyage lors de la fermeture de la page
+        window.addEventListener('beforeunload', () => {
+            if (blockTimer) {
+                clearInterval(blockTimer);
+            }
         });
     </script>
 </body>

@@ -15,16 +15,37 @@ from functools import wraps
 from collections import defaultdict
 import time
 
-# Rate limiting simple
+# Rate limiting avec blocage progressif
 rate_limit_storage = defaultdict(list)
+blocked_ips = {}  # Stockage des IPs bloquées avec timestamp et durée
+block_count = defaultdict(int)  # Compteur de blocages par IP
 
-def rate_limit(max_requests=5, window=300):  # 5 requêtes par 5 minutes
-    """Décorateur de rate limiting"""
+def rate_limit(max_requests=5, window=300, block_duration=30):  # 5 requêtes par 5 minutes, blocage 30s
+    """Décorateur de rate limiting avec blocage progressif (30s puis 1h)"""
     def decorator(f):
         @wraps(f)
         def decorated_function(*args, **kwargs):
             client_ip = request.remote_addr
             now = time.time()
+            
+            # Vérifie si l'IP est actuellement bloquée
+            if client_ip in blocked_ips:
+                block_info = blocked_ips[client_ip]
+                block_time = block_info['time']
+                duration = block_info['duration']
+                time_remaining = duration - (now - block_time)
+                
+                if time_remaining > 0:
+                    return jsonify({
+                        'error': 'Trop de tentatives de connexion',
+                        'blocked': True,
+                        'time_remaining': int(time_remaining),
+                        'is_long_block': duration > 60  # Indique si c'est un blocage long
+                    }), 429
+                else:
+                    # Le blocage a expiré, supprime l'IP de la liste
+                    del blocked_ips[client_ip]
+                    rate_limit_storage[client_ip] = []  # Reset le compteur
             
             # Nettoie les anciennes requêtes
             rate_limit_storage[client_ip] = [
@@ -34,7 +55,27 @@ def rate_limit(max_requests=5, window=300):  # 5 requêtes par 5 minutes
             
             # Vérifie la limite
             if len(rate_limit_storage[client_ip]) >= max_requests:
-                return jsonify({'error': 'Trop de tentatives, réessayez plus tard'}), 429
+                # Détermine la durée du blocage selon le nombre de blocages précédents
+                current_block_count = block_count[client_ip]
+                
+                if current_block_count >= 2:
+                    # Après 2 blocages de 30s, bloque pour 1 heure
+                    duration = 3600  # 1 heure
+                    block_count[client_ip] = 0  # Reset après blocage long
+                else:
+                    # Premier ou deuxième blocage : 30 secondes
+                    duration = block_duration
+                    block_count[client_ip] += 1
+                
+                # Bloque l'IP
+                blocked_ips[client_ip] = {'time': now, 'duration': duration}
+                
+                return jsonify({
+                    'error': 'Trop de tentatives de connexion',
+                    'blocked': True,
+                    'time_remaining': duration,
+                    'is_long_block': duration > 60
+                }), 429
             
             # Enregistre cette requête
             rate_limit_storage[client_ip].append(now)
@@ -247,7 +288,7 @@ def create_app(config_name='default'):
             return jsonify({'error': str(e)}), 400
 
     @app.route('/api/login', methods=['POST'])
-    @rate_limit(max_requests=5, window=300)
+    @rate_limit(max_requests=5, window=300, block_duration=30)
     def login():
         """Connexion utilisateur - Version simple qui fonctionne"""
         data = request.get_json()
