@@ -56,8 +56,8 @@ case "$1" in
 
     clean)
         echo "🧹 Nettoyage complet (ATTENTION: supprime toutes les données)..."
-        read -p "Êtes-vous sûr ? (oui/non): " confirm
-        if [ "$confirm" = "oui" ]; then
+        read -p "Êtes-vous sûr ? (y/n): " confirm
+        if [ "$confirm" = "y" ]; then
             docker-compose down -v
             docker system prune -f
             rm -rf data/* logs/*
