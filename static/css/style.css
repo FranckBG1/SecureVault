@@ -10,7 +10,7 @@ body {
 /* Styles spécifiques pour la page de login */
 body.login-page {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    background: linear-gradient(rgba(102, 126, 234, 0.8), rgba(118, 75, 162, 0.8)) fixed center;
+    background: #2c3e50; /* Même couleur sombre que la sidebar */
     height: 100vh;
     margin: 0;
     padding: 0;
@@ -29,8 +29,8 @@ body.login-page {
 
 .login-card {
     background: white;
-    border-radius: 12px;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+    border-radius: 16px; /* Même bordure arrondie que le dashboard */
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08); /* Même ombre que les cartes du dashboard */
     padding: 40px;
     width: 100%;
     max-width: 450px;
@@ -449,6 +449,72 @@ body.login-page {
     text-align: center;
 }
 
+/* Styles pour le bouton de copie dans la modal */
+.copy-password-btn {
+    background: #ff9800;
+    color: white;
+    border: none;
+    padding: 8px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: all 0.2s ease;
+    position: absolute;
+    right: 92px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.copy-password-btn:hover {
+    background: #f57c00;
+    transform: translateY(-50%) scale(1.1);
+}
+
+.copy-password-btn:active {
+    transform: translateY(-50%) scale(0.95);
+}
+
+/* Message d'avertissement de copie temporaire */
+.password-copy-message {
+    background: #fff3cd;
+    color: #856404;
+    border: 1px solid #ffeaa7;
+    border-radius: 6px;
+    padding: 10px 15px;
+    margin-top: 8px;
+    font-size: 13px;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    animation: slideInWarning 0.3s ease;
+}
+
+.password-copy-message i {
+    margin-right: 8px;
+    color: #f39c12;
+}
+
+.password-copy-message #countdown {
+    font-weight: bold;
+    color: #d68910;
+}
+
+@keyframes slideInWarning {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
 /* Styles pour le dashboard */
 body.dashboard-page {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -853,11 +919,12 @@ textarea.form-input {
 }
 
 .password-input-group .form-input {
-    padding-right: 110px;
+    padding-right: 130px; /* Espace pour 3 boutons */
 }
 
 .toggle-visibility,
-.generate-btn-small {
+.generate-btn-small,
+.copy-btn-small {
     position: absolute;
     background: #f8f9fa;
     border: 1px solid #e0e0e0;
@@ -867,32 +934,34 @@ textarea.form-input {
     border-radius: 8px;
     transition: all 0.3s ease;
     font-size: 14px;
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    top: 50%;
+    transform: translateY(-50%);
 }
 
 .toggle-visibility {
-    right: 50px;
-    width: 36px;
-    height: 36px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    right: 88px; /* Bouton œil */
+}
+
+.copy-btn-small {
+    right: 50px; /* Bouton copie */
 }
 
 .generate-btn-small {
-    right: 8px;
-    width: 36px;
-    height: 36px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    right: 12px; /* Bouton génération */
 }
 
 .toggle-visibility:hover,
-.generate-btn-small:hover {
+.generate-btn-small:hover,
+.copy-btn-small:hover {
     background: #667eea;
     color: white;
     border-color: #667eea;
-    transform: scale(1.1);
+    transform: translateY(-50%) scale(1.1);
 }
 
 /* Indicateur de force du mot de passe dans la modal */
@@ -1194,3 +1263,147 @@ textarea.form-input {
     }
 }
 
+
+/* Styles spécifiques pour la modal du mot de passe maître */
+.modal-content[style*="max-width: 400px"] {
+    border-radius: 16px;
+    padding: 0;
+    overflow: hidden;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    border: 2px solid rgba(102, 126, 234, 0.1);
+}
+
+.modal-content[style*="max-width: 400px"] .modal-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border-radius: 16px 16px 0 0;
+    padding: 20px 24px;
+    border-bottom: none;
+}
+
+.modal-content[style*="max-width: 400px"] .modal-header h3 {
+    color: white;
+    font-size: 1.2rem;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.modal-content[style*="max-width: 400px"] .modal-header h3:before {
+    content: "🔐";
+    font-size: 1.1rem;
+}
+
+.modal-content[style*="max-width: 400px"] .modal-close {
+    background: rgba(255, 255, 255, 0.2);
+    color: white;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.modal-content[style*="max-width: 400px"] .modal-close:hover {
+    background: rgba(255, 255, 255, 0.9);
+    color: #e74c3c;
+    transform: rotate(90deg);
+}
+
+.modal-content[style*="max-width: 400px"] form {
+    padding: 24px;
+}
+
+.modal-content[style*="max-width: 400px"] .form-group {
+    margin-bottom: 20px;
+}
+
+.modal-content[style*="max-width: 400px"] .form-group label {
+    font-size: 14px;
+    color: #2c3e50;
+    margin-bottom: 10px;
+    font-weight: 600;
+}
+
+.modal-content[style*="max-width: 400px"] .form-input {
+    padding: 16px;
+    border: 2px solid #e8ecef;
+    border-radius: 12px;
+    font-size: 16px;
+    width: 100%;
+    box-sizing: border-box;
+    transition: all 0.3s ease;
+}
+
+.modal-content[style*="max-width: 400px"] .form-input:focus {
+    border-color: #667eea;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.15);
+    outline: none;
+}
+
+.modal-content[style*="max-width: 400px"] .modal-actions {
+    display: flex;
+    gap: 12px;
+    justify-content: flex-end;
+    padding-top: 20px;
+    border-top: 1px solid #f0f0f0;
+    margin: 20px -24px -24px -24px;
+    padding: 20px 24px;
+    background: #f8f9fa;
+    border-radius: 0 0 16px 16px;
+}
+
+.modal-content[style*="max-width: 400px"] .btn {
+    padding: 12px 20px;
+    border-radius: 10px;
+    font-weight: 600;
+    font-size: 14px;
+    min-width: 100px;
+    transition: all 0.3s ease;
+    border: 2px solid transparent;
+}
+
+.modal-content[style*="max-width: 400px"] .btn-secondary {
+    background: #ecf0f1;
+    color: #2c3e50;
+    border-color: #bdc3c7;
+}
+
+.modal-content[style*="max-width: 400px"] .btn-secondary:hover {
+    background: #d5dbdb;
+    transform: translateY(-1px);
+}
+
+.modal-content[style*="max-width: 400px"] .btn-primary {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border-color: #667eea;
+}
+
+.modal-content[style*="max-width: 400px"] .btn-primary:hover {
+    background: linear-gradient(135deg, #5a6fd8 0%, #6a4190 100%);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+}
+
+.modal-content[style*="max-width: 400px"] .btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none !important;
+}
+
+/* S'assurer que les modals sont bien centrées et sans débordement */
+.modal {
+    padding: 20px;
+    box-sizing: border-box;
+}
+
+.modal-content {
+    max-height: calc(100vh - 40px);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+.modal-content form {
+    flex: 1;
+    overflow-y: auto;
+    max-height: calc(100vh - 180px);
+}
