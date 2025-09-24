@@ -22,9 +22,6 @@ __pycache__/
 *.log
 logs/
 
-# Sauvegardes
-backups/
-
 # Git
 .git/
 .gitignore
