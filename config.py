@@ -16,7 +16,7 @@ class Config:
     PERMANENT_SESSION_LIFETIME = timedelta(minutes=30)
 
     # Configuration de sécurité
-    AUTO_LOGOUT_TIME = 1800  # 30 minutes en secondes
+    AUTO_LOGOUT_TIME = 300  # 5 minutes en secondes
     MAX_LOGIN_ATTEMPTS = 5
     LOCKOUT_DURATION = 300  # 5 minutes en secondes
 

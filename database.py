@@ -354,3 +354,47 @@ class DatabaseManager:
                 (cutoff_date,)
             )
             conn.commit()
+
+    def get_user_info(self, user_id):
+        """Récupère les informations de l'utilisateur"""
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute('SELECT username, created_at, last_login FROM users WHERE id = ?', (user_id, ))
+            return cursor.fetchone()
+    def change_username(self, user_id, new_username):
+        """Change le nom d'utilisateur"""
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute('UPDATE users SET username = ? WHERE id = ?', (new_username, user_id))
+            conn.commit()
+    def delete_account(self, user_id):
+        """Supprime un compte et toutes ses données associées"""
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            
+            # Vérifie que l'utilisateur existe
+            cursor.execute('SELECT id FROM users WHERE id = ?', (user_id,))
+            if not cursor.fetchone():
+                raise ValueError("Utilisateur non trouvé")
+            
+            # Supprime explicitement les données liées (même si CASCADE devrait le faire)
+            cursor.execute('DELETE FROM sessions WHERE user_id = ?', (user_id,))
+            cursor.execute('DELETE FROM passwords WHERE user_id = ?', (user_id,))
+            
+            # Supprime l'utilisateur
+            cursor.execute('DELETE FROM users WHERE id = ?', (user_id,))
+            
+            # Vérifie que la suppression a réussi
+            if cursor.rowcount == 0:
+                raise ValueError("Erreur lors de la suppression")
+            
+            conn.commit()
+            return True
+    def change_password(self, user_id, new_password):
+        """Change le mot de passe"""
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            salt = self.crypto.generate_salt()
+            hashed_password = self.crypto.hash_master_password(new_password)
+            cursor.execute('UPDATE users SET master_password_hash = ?, salt = ? WHERE id = ?', (hashed_password, salt, user_id))
+            conn.commit()
