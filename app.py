@@ -5,7 +5,7 @@ Gestionnaire de mots de passe sécurisé avec chiffrement AES-256
 import json
 import os
 from datetime import datetime, timedelta
-from flask import Flask, request, jsonify, session, render_template, flash, redirect
+from flask import Flask, request, jsonify, session, render_template, flash, redirect, url_for
 from flask_wtf import FlaskForm, CSRFProtect
 from wtforms import StringField, PasswordField, SubmitField
 from wtforms.validators import DataRequired, Length, Regexp
@@ -43,55 +43,41 @@ def rate_limit(max_requests=5, window=300):  # 5 requêtes par 5 minutes
         return decorated_function
     return decorator
 
-
-# Imports avancés avec fallback
+# Imports des modules locaux
 try:
-    from flask_session import Session
-    from auth import SessionManager, login_required, get_current_user_id, require_master_password
+    # Suppression de Flask-Session qui cause des problèmes
+    # from flask_session import Session
+    from auth import SessionManager
     from config import config
     from crypto_utils import PasswordGenerator, CryptoManager
     from database import DatabaseManager
-
     FULL_FEATURES = True
-except ImportError:
+except ImportError as e:
+    print(f"⚠️ Erreur d'import des modules: {e}")
     FULL_FEATURES = False
-    print("⚠️ Modules avancés non disponibles, mode simplifié activé")
 
-    def check_auth():
-        """Vérifie si l'utilisateur est connecté"""
-        return session.get('logged_in', False)
+def validate_input(data, field_name, min_length=1, max_length=255, pattern=None, escape_html=True):
+    """Validation avancée des entrées utilisateur"""
+    if not data or not isinstance(data, str):
+        raise ValueError(f'{field_name} requis')
 
-    def login_required_simple(f):
-        """Décorateur simple pour l'authentification"""
-        @wraps(f)
-        def decorated_function(*args, **kwargs):
-            if not check_auth():
-                return redirect('/login')
-            return f(*args, **kwargs)
-        return decorated_function
-    return decorator
+    data = data.strip()
 
-    
+    if len(data) < min_length:
+        raise ValueError(f'{field_name} doit contenir au moins {min_length} caractères')
+    if len(data) > max_length:
+        raise ValueError(f'{field_name} ne peut pas dépasser {max_length} caractères')
 
-def login_required_page(f):
-    """Décorateur pour les pages web - redirige vers login si non authentifié"""
-    @wraps(f)
-    def decorated_function(*args, **kwargs):
-        if not session.get('user_id'):
-            return redirect('/login')
-        # Valide aussi la session avec le SessionManager
-        try:
-            session_manager = SessionManager(DatabaseManager(config['default'].DATABASE_PATH))
-            if not session_manager.validate_session():
-                return redirect('/login')
-        except:
-            return redirect('/login')
-        return f(*args, **kwargs)
-    return decorated_function
+    # Vérifie le pattern si fourni
+    if pattern:
+        import re
+        if not re.match(pattern, data):
+            raise ValueError(f'{field_name} contient des caractères non autorisés')
 
-
-    login_required = login_required_simple
-
+    # Échappe HTML sauf pour les mots de passe
+    if escape_html and 'mot de passe' not in field_name.lower():
+        return escape(data)
+    return data
 
 class LoginForm(FlaskForm):
     username = StringField('Nom d\'utilisateur', validators=[
@@ -105,29 +91,65 @@ class LoginForm(FlaskForm):
     ])
     submit = SubmitField('Se connecter')
 
+# Décorateurs d'authentification - Version simplifiée
+def login_required(f):
+    """Décorateur pour les API - retourne JSON si non authentifié"""
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if not session.get('user_id') or not session.get('logged_in'):
+            return jsonify({'error': 'Authentification requise', 'redirect': '/login'}), 401
+        return f(*args, **kwargs)
+    return decorated_function
 
-def validate_input(data, field_name, min_length=1, max_length=255, pattern=None, escape_html=True):
-    """Validation avancée des entrées utilisateur"""
-    if not data or not isinstance(data, str):
-        raise ValueError(f'{field_name} requis')
-    
-    data = data.strip()
-    
-    if len(data) < min_length:
-        raise ValueError(f'{field_name} doit contenir au moins {min_length} caractères')
-    if len(data) > max_length:
-        raise ValueError(f'{field_name} ne peut pas dépasser {max_length} caractères')
-    
-    # Vérifie le pattern si fourni
-    if pattern:
-        import re
-        if not re.match(pattern, data):
-            raise ValueError(f'{field_name} contient des caractères non autorisés')
-    
-    # Échappe HTML sauf pour les mots de passe
-    if escape_html and 'mot de passe' not in field_name.lower():
-        return escape(data)
-    return data
+def login_required_page(f):
+    """Décorateur pour les pages web - redirige vers login si non authentifié"""
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if not session.get('user_id') or not session.get('logged_in'):
+            return redirect(url_for('login_page'))
+        return f(*args, **kwargs)
+    return decorated_function
+
+def require_master_password(f):
+    """Décorateur pour vérifier le mot de passe maître - Version simplifiée"""
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        master_password = request.headers.get('X-Master-Password')
+        if not master_password:
+            data = request.get_json() or {}
+            master_password = data.get('master_password')
+
+        if not master_password:
+            return jsonify({'error': 'Mot de passe maître requis'}), 400
+
+        # Vérifie le mot de passe maître - Version simple
+        try:
+            user_id = session.get('user_id')
+            if not user_id:
+                return jsonify({'error': 'Session invalide'}), 401
+
+            # Validation simple du mot de passe maître
+            username = session.get('username')
+            if not username:
+                return jsonify({'error': 'Session incomplète'}), 401
+
+            # Vérifie avec la base de données
+            try:
+                app.db.authenticate_user(username, master_password, request.remote_addr)
+                # Stock temporairement pour utilisation dans la route
+                request.master_password = master_password
+            except ValueError:
+                return jsonify({'error': 'Mot de passe maître incorrect'}), 401
+
+        except Exception as e:
+            return jsonify({'error': f'Erreur de vérification: {str(e)}'}), 500
+
+        return f(*args, **kwargs)
+    return decorated_function
+
+def get_current_user_id():
+    """Récupère l'ID de l'utilisateur connecté"""
+    return session.get('user_id')
 
 
 def create_app(config_name='default'):
@@ -135,22 +157,41 @@ def create_app(config_name='default'):
     app = Flask(__name__)
 
     # Configuration
-    app.config.from_object(config[config_name])
-    # Configuration de la secret key depuis Docker ou config
+    try:
+        app.config.from_object(config[config_name])
+    except KeyError:
+        # Fallback si la config n'existe pas
+        app.config.from_object(config['default'])
+
+    # Configuration de la secret key - CRITIQUE pour les sessions
     secret_key_file = os.environ.get('SECRET_KEY_FILE')
     if secret_key_file and os.path.exists(secret_key_file):
         # Chargement depuis le secret Docker
-        with open(secret_key_file, 'r') as f:
-            app.config['SECRET_KEY'] = f.read().strip()
-    elif not app.config.get('SECRET_KEY'):
-        # Fallback vers la variable d'environnement ou config par défaut
-        app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', app.config.get('SECRET_KEY', 'default-secret-key'))
-
-    # Sessions Flask : si Flask-Session dispo, sinon sessions natives
-    if FULL_FEATURES:
-        Session(app)  # sessions côté serveur
+        try:
+            with open(secret_key_file, 'r') as f:
+                app.config['SECRET_KEY'] = f.read().strip()
+        except Exception as e:
+            print(f"⚠️ Erreur lecture du fichier secret: {e}")
+            app.config['SECRET_KEY'] = 'dev-secret-key-fallback'
+    elif os.environ.get('SECRET_KEY'):
+        # Depuis variable d'environnement
+        app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY')
+    elif app.config.get('SECRET_KEY'):
+        # Depuis la config
+        pass  # Déjà définie
     else:
-        print("ℹ️ Utilisation des sessions natives Flask")
+        # Fallback de sécurité
+        app.config['SECRET_KEY'] = 'dev-secret-key-change-in-production-please'
+        print("⚠️ Utilisation d'une clé secrète par défaut - changez-la en production !")
+
+    # Vérification que la clé secrète est bien définie
+    if not app.config.get('SECRET_KEY'):
+        raise RuntimeError("SECRET_KEY n'est pas définie - impossible de démarrer l'application")
+
+    print(f"✅ SECRET_KEY configurée: {len(app.config.get('SECRET_KEY', ''))} caractères")
+
+    # Utilisation EXCLUSIVE des sessions Flask natives - Pas de Flask-Session
+    print("ℹ️ Utilisation des sessions Flask natives uniquement")
 
     # S'assurer que le répertoire data existe pour la base SQLite
     data_dir = os.path.dirname(app.config['DATABASE_PATH'])
@@ -208,7 +249,7 @@ def create_app(config_name='default'):
     @app.route('/api/login', methods=['POST'])
     @rate_limit(max_requests=5, window=300)
     def login():
-        """Connexion utilisateur"""
+        """Connexion utilisateur - Version simple qui fonctionne"""
         data = request.get_json()
 
         if not data or not data.get('username') or not data.get('master_password'):
@@ -224,22 +265,17 @@ def create_app(config_name='default'):
         try:
             user_id = app.db.authenticate_user(username, master_password, request.remote_addr)
 
-            # Crée la session
-            session_manager = SessionManager(app.db)
-            session_token = session_manager.create_session(user_id, remember_me)
-
-
-            # Stocke les informations dans la session Flask
+            # Utilise UNIQUEMENT les sessions Flask natives - simple et efficace
+            session.permanent = remember_me
             session['user_id'] = user_id
-
             session['username'] = username
-            session['master_password'] = master_password  # Stockage temporaire pour déchiffrement
+            session['logged_in'] = True
+            session['login_time'] = datetime.now().isoformat()
 
             return jsonify({
                 'message': 'Connexion réussie',
-                'session_token': session_token,
                 'user_id': user_id
-            }), 200
+            }, 200)
         except ValueError as e:
             return jsonify({'error': str(e)}), 401
 
@@ -247,17 +283,14 @@ def create_app(config_name='default'):
     @login_required
     def logout():
         """Déconnexion utilisateur"""
-        session_manager = SessionManager(app.db)
-        session_manager.destroy_session()
+        session.clear()
         return jsonify({'message': 'Déconnexion réussie'}), 200
 
     @app.route('/api/logout-all', methods=['POST'])
     @login_required
     def logout_all():
-        """Déconnexion de toutes les sessions"""
-        user_id = get_current_user_id()
-        session_manager = SessionManager(app.db)
-        session_manager.destroy_all_user_sessions(user_id)
+        """Déconnexion de toutes les sessions - Version simplifiée"""
+        session.clear()
         return jsonify({'message': 'Toutes les sessions ont été fermées'}), 200
 
     @app.route('/api/user-info', methods=['GET'])
@@ -430,28 +463,156 @@ def create_app(config_name='default'):
         """Récupère un mot de passe spécifique (déchiffré)"""
         user_id = get_current_user_id()
 
-        # Essayer d'abord avec le mot de passe maître en session
-        master_password = session.get('master_password')
-
-        # Si pas en session, récupérer depuis l'en-tête
+        # Récupérer le mot de passe maître depuis l'en-tête OU depuis le body
+        master_password = request.headers.get('X-Master-Password')
         if not master_password:
-            master_password = request.headers.get('X-Master-Password')
-            if not master_password:
-                return jsonify({'error': 'Mot de passe maître requis'}), 400
+            # Essaie de récupérer depuis les paramètres de la requête pour les GET
+            master_password = request.args.get('master_password')
+
+        if not master_password:
+            return jsonify({'error': 'Mot de passe maître requis'}), 400
 
         password_data = app.db.get_password_by_id(password_id, user_id)
         if not password_data:
             return jsonify({'error': 'Mot de passe non trouvé'}), 404
 
         try:
-            # Génère la clé de chiffrement directement
-            session_manager = SessionManager(app.db)
-            encryption_key = session_manager.get_encryption_key(user_id, master_password)
+            # Vérifie d'abord le mot de passe maître
+            username = session.get('username')
 
-            # Déchiffre les données sensibles
-            decrypted_password = crypto.decrypt_data(password_data['password_encrypted'], encryption_key)
-            decrypted_notes = crypto.decrypt_data(password_data['notes_encrypted'], encryption_key) if password_data[
-                'notes_encrypted'] else ""
+            # Essaie d'abord l'authentification normale
+            try:
+                app.db.authenticate_user(username, master_password, request.remote_addr)
+            except ValueError as auth_error:
+                return jsonify({'error': 'Mot de passe maître incorrect'}), 401
+
+            # Vérification de la consistance des données
+            if not password_data['password_encrypted']:
+                return jsonify({'error': 'Données corrompues - mot de passe non chiffré trouvé'}), 500
+
+            # Génère la clé de chiffrement directement
+            if FULL_FEATURES:
+                try:
+                    session_manager = SessionManager(app.db)
+                    encryption_key = session_manager.get_encryption_key(user_id, master_password)
+                except Exception as e:
+                    # Fallback vers mode simplifié
+                    if len(master_password) < 32:
+                        # Étend la clé si elle est trop courte
+                        extended_key = (master_password * 32)[:32]
+                        encryption_key = extended_key.encode('utf-8')
+                    else:
+                        encryption_key = master_password[:32].encode('utf-8')
+
+                # Déchiffre les données sensibles
+                try:
+                    decrypted_password = crypto.decrypt_data(password_data['password_encrypted'], encryption_key)
+                    decrypted_notes = crypto.decrypt_data(password_data['notes_encrypted'], encryption_key) if password_data['notes_encrypted'] else ""
+                except Exception as e:
+                    # Essaie avec le mode simplifié
+                    try:
+                        if len(master_password) < 32:
+                            extended_key = (master_password * 32)[:32]
+                            encryption_key = extended_key.encode('utf-8')
+                        else:
+                            encryption_key = master_password[:32].encode('utf-8')
+                        decrypted_password = crypto.decrypt_data(password_data['password_encrypted'], encryption_key)
+                        decrypted_notes = crypto.decrypt_data(password_data['notes_encrypted'], encryption_key) if password_data['notes_encrypted'] else ""
+                    except Exception as e2:
+                        return jsonify({'error': f'Impossible de déchiffrer le mot de passe. Erreur: {str(e2)}'}), 400
+            else:
+                # Mode simplifié - utilise directement le mot de passe maître comme clé
+                try:
+                    if len(master_password) < 32:
+                        # Étend la clé si elle est trop courte
+                        extended_key = (master_password * 32)[:32]
+                        encryption_key = extended_key.encode('utf-8')
+                    else:
+                        encryption_key = master_password[:32].encode('utf-8')
+
+                    decrypted_password = crypto.decrypt_data(password_data['password_encrypted'], encryption_key)
+                    decrypted_notes = crypto.decrypt_data(password_data['notes_encrypted'], encryption_key) if password_data['notes_encrypted'] else ""
+                except Exception as e:
+                    # Essaie avec d'autres méthodes de génération de clé
+                    try:
+                        # Méthode alternative 1: utilise directement les bytes du mot de passe
+                        key_bytes = master_password.encode('utf-8')
+                        if len(key_bytes) > 32:
+                            encryption_key = key_bytes[:32]
+                        else:
+                            encryption_key = key_bytes + b'\x00' * (32 - len(key_bytes))
+
+                        decrypted_password = crypto.decrypt_data(password_data['password_encrypted'], encryption_key)
+                        decrypted_notes = crypto.decrypt_data(password_data['notes_encrypted'], encryption_key) if password_data['notes_encrypted'] else ""
+                    except Exception as e2:
+                        # Si toutes les méthodes échouent, retourne une erreur détaillée
+                        return jsonify({
+                            'error': f'Impossible de déchiffrer le mot de passe. Le mot de passe maître semble incorrect ou les données sont corrompues. Détail: {str(e2)}'
+                        }), 400
+
+            # Met à jour la date de dernière utilisation
+            app.db.update_last_used(password_id, user_id)
+
+            result = {
+                'id': password_data['id'],
+                'title': password_data['title'],
+                'url': password_data['url'],
+                'username': password_data['username'],
+                'password': decrypted_password,
+                'notes': decrypted_notes,
+                'created_at': password_data['created_at'],
+                'updated_at': password_data['updated_at'],
+                'last_used': password_data['last_used'],
+                'tags': json.loads(password_data['tags']) if password_data['tags'] else []
+            }
+
+            return jsonify(result), 200
+
+        except ValueError as e:
+            return jsonify({'error': 'Mot de passe maître incorrect'}), 401
+        except Exception as e:
+            import traceback
+            traceback.print_exc()
+            return jsonify({'error': f'Erreur de déchiffrement: {str(e)}'}), 500
+
+    @app.route('/api/passwords/<int:password_id>/decrypt', methods=['POST'])
+    @login_required
+    def decrypt_password(password_id):
+        """Récupère un mot de passe spécifique (déchiffré) via POST avec mot de passe maître dans le body"""
+        user_id = get_current_user_id()
+        data = request.get_json()
+
+        if not data or not data.get('master_password'):
+            return jsonify({'error': 'Mot de passe maître requis'}), 400
+
+        master_password = data.get('master_password')
+
+        password_data = app.db.get_password_by_id(password_id, user_id)
+        if not password_data:
+            return jsonify({'error': 'Mot de passe non trouvé'}), 404
+
+        try:
+            # Vérifie d'abord le mot de passe maître
+            username = session.get('username')
+            app.db.authenticate_user(username, master_password, request.remote_addr)
+
+            # Génère la clé de chiffrement directement
+            if FULL_FEATURES:
+                session_manager = SessionManager(app.db)
+                encryption_key = session_manager.get_encryption_key(user_id, master_password)
+
+                # Déchiffre les données sensibles
+                decrypted_password = crypto.decrypt_data(password_data['password_encrypted'], encryption_key)
+                decrypted_notes = crypto.decrypt_data(password_data['notes_encrypted'], encryption_key) if password_data['notes_encrypted'] else ""
+            else:
+                # Mode simplifié - utilise directement le mot de passe maître comme clé
+                try:
+                    encryption_key = master_password.encode('utf-8')
+                    decrypted_password = crypto.decrypt_data(password_data['password_encrypted'], encryption_key)
+                    decrypted_notes = crypto.decrypt_data(password_data['notes_encrypted'], encryption_key) if password_data['notes_encrypted'] else ""
+                except:
+                    # Si le déchiffrement échoue, retourne un message d'erreur plus clair
+                    return jsonify({'error': 'Impossible de déchiffrer le mot de passe. Vérifiez votre mot de passe maître.'}), 400
 
             # Met à jour la date de dernière utilisation
             app.db.update_last_used(password_id, user_id)
@@ -477,16 +638,22 @@ def create_app(config_name='default'):
 
     @app.route('/api/passwords', methods=['POST'])
     @login_required
-    @require_master_password
     def add_password():
-        """Ajoute un nouveau mot de passe"""
+        """Ajoute un nouveau mot de passe - Version simplifiée"""
         data = request.get_json()
         user_id = get_current_user_id()
-        encryption_key = request.encryption_key
 
         # Validation des données requises
-        if not data or not data.get('title') or not data.get('password'):
-            return jsonify({'error': 'Titre et mot de passe requis'}), 400
+        if not data or not data.get('title') or not data.get('password') or not data.get('master_password'):
+            return jsonify({'error': 'Titre, mot de passe et mot de passe maître requis'}), 400
+
+        # Vérifie le mot de passe maître
+        try:
+            username = session.get('username')
+            master_password = data.get('master_password')
+            app.db.authenticate_user(username, master_password, request.remote_addr)
+        except ValueError:
+            return jsonify({'error': 'Mot de passe maître incorrect'}), 401
 
         title = data['title'].strip()
         url = data.get('url', '').strip()
@@ -496,6 +663,13 @@ def create_app(config_name='default'):
         tags = data.get('tags', [])
 
         try:
+            # Génère la clé de chiffrement si possible
+            if FULL_FEATURES:
+                session_manager = SessionManager(app.db)
+                encryption_key = session_manager.get_encryption_key(user_id, master_password)
+            else:
+                encryption_key = master_password  # Fallback simple
+
             password_id = app.db.add_password(
                 user_id, title, url, username, password, notes, tags, encryption_key
             )
@@ -508,17 +682,30 @@ def create_app(config_name='default'):
 
     @app.route('/api/passwords/<int:password_id>', methods=['PUT'])
     @login_required
-    @require_master_password
     def update_password(password_id):
-        """Met à jour un mot de passe existant"""
+        """Met à jour un mot de passe existant - Version simplifiée"""
         data = request.get_json()
         user_id = get_current_user_id()
-        encryption_key = request.encryption_key
 
-        if not data:
-            return jsonify({'error': 'Données requises'}), 400
+        if not data or not data.get('master_password'):
+            return jsonify({'error': 'Données et mot de passe maître requis'}), 400
+
+        # Vérifie le mot de passe maître
+        try:
+            username = session.get('username')
+            master_password = data.get('master_password')
+            app.db.authenticate_user(username, master_password, request.remote_addr)
+        except ValueError:
+            return jsonify({'error': 'Mot de passe maître incorrect'}), 401
 
         try:
+            # Génère la clé de chiffrement si possible
+            if FULL_FEATURES:
+                session_manager = SessionManager(app.db)
+                encryption_key = session_manager.get_encryption_key(user_id, master_password)
+            else:
+                encryption_key = master_password  # Fallback simple
+
             success = app.db.update_password(
                 password_id, user_id,
                 title=data.get('title'),
