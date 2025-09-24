@@ -14,34 +14,16 @@ services:
       - SECRET_KEY_FILE=/run/secrets/flask_secret
     volumes:
       - vault_data:/app/data
-      - ./flask_session:/app/flask_session
     secrets:
       - flask_secret
       - db_encryption_key
     networks:
       - vault_network
-    depends_on:
-      - backup-service
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
       interval: 30s
       timeout: 10s
       retries: 3
-
-  # Service de sauvegarde automatisée
-  backup-service:
-    image: alpine:latest
-    container_name: securevault-backup
-    restart: unless-stopped
-    volumes:
-      - vault_data:/data:ro
-      - vault_backups:/backups
-      - ./scripts:/scripts:ro
-    environment:
-      - BACKUP_INTERVAL=86400  # 24 heures en secondes
-    command: sh -c "while true; do sh /scripts/backup.sh; sleep $${BACKUP_INTERVAL}; done"
-    networks:
-      - vault_network
 
   # Service de monitoring (optionnel)
   watchtower:
@@ -60,16 +42,6 @@ services:
 volumes:
   vault_data:
     driver: local
-    driver_opts:
-      type: none
-      device: ${PWD}/data
-      o: bind
-  vault_backups:
-    driver: local
-    driver_opts:
-      type: none
-      device: ${PWD}/backups
-      o: bind
 
 # Secrets pour la sécurité
 secrets:

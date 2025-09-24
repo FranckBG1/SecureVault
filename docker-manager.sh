@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Script de gestion de l'environnement Docker SecureVault
-# Usage: ./docker-manager.sh [start|stop|restart|logs|backup|restore|status]
+# Usage: ./docker-manager.sh [start|stop|restart|logs|status]
 
 set -e
 
@@ -13,7 +13,7 @@ case "$1" in
         echo "🚀 Démarrage de SecureVault..."
 
         # Créer les répertoires nécessaires
-        mkdir -p data backups logs
+        mkdir -p data logs
 
         # Générer les secrets si ils n'existent pas
         if [ ! -f "secrets/flask_secret.txt" ]; then
@@ -46,24 +46,6 @@ case "$1" in
         docker-compose logs -f --tail=100
         ;;
 
-    backup)
-        echo "💾 Lancement de la sauvegarde manuelle..."
-        docker-compose exec backup-service sh /scripts/backup.sh
-        echo "✅ Sauvegarde terminée"
-        ;;
-
-    restore)
-        if [ -z "$2" ]; then
-            echo "❌ Usage: $0 restore <nom_fichier_backup>"
-            echo "📂 Sauvegardes disponibles:"
-            ls -la backups/securevault_backup_*.db* 2>/dev/null || echo "Aucune sauvegarde trouvée"
-            exit 1
-        fi
-        echo "🔄 Restauration depuis: $2"
-        docker-compose exec backup-service sh /scripts/restore.sh "$2"
-        echo "✅ Restauration terminée"
-        ;;
-
     status)
         echo "📊 État des services SecureVault:"
         docker-compose ps
@@ -78,7 +60,7 @@ case "$1" in
         if [ "$confirm" = "oui" ]; then
             docker-compose down -v
             docker system prune -f
-            rm -rf data/* backups/* logs/*
+            rm -rf data/* logs/*
             echo "✅ Nettoyage terminé"
         else
             echo "❌ Nettoyage annulé"
@@ -95,15 +77,11 @@ case "$1" in
         echo "  stop     - Arrêter SecureVault"
         echo "  restart  - Redémarrer SecureVault"
         echo "  logs     - Afficher les logs en temps réel"
-        echo "  backup   - Créer une sauvegarde manuelle"
-        echo "  restore  - Restaurer depuis une sauvegarde"
         echo "  status   - Afficher l'état des services"
         echo "  clean    - Nettoyage complet (DANGER)"
         echo ""
         echo "Exemples:"
         echo "  $0 start"
         echo "  $0 logs"
-        echo "  $0 backup"
-        echo "  $0 restore securevault_backup_20231201_120000.db.gz"
         ;;
 esac

@@ -5,23 +5,15 @@ Gestionnaire de mots de passe sécurisé avec chiffrement AES-256
 import json
 import os
 from datetime import datetime, timedelta
-
 from flask import Flask, request, jsonify, session, render_template, flash, redirect
-from flask_session import Session
 from flask_wtf import FlaskForm, CSRFProtect
 from wtforms import StringField, PasswordField, SubmitField
 from wtforms.validators import DataRequired, Length, Regexp
 from markupsafe import escape
 
-# Imports des modules avancés
-from auth import SessionManager, login_required, get_current_user_id, require_master_password
-from config import config
-from crypto_utils import PasswordGenerator, CryptoManager
-from database import DatabaseManager
 from functools import wraps
 from collections import defaultdict
 import time
-
 
 # Rate limiting simple
 rate_limit_storage = defaultdict(list)
@@ -51,6 +43,36 @@ def rate_limit(max_requests=5, window=300):  # 5 requêtes par 5 minutes
         return decorated_function
     return decorator
 
+
+# Imports avancés avec fallback
+try:
+    from flask_session import Session
+    from auth import SessionManager, login_required, get_current_user_id, require_master_password
+    from config import config
+    from crypto_utils import PasswordGenerator, CryptoManager
+    from database import DatabaseManager
+
+    FULL_FEATURES = True
+except ImportError:
+    FULL_FEATURES = False
+    print("⚠️ Modules avancés non disponibles, mode simplifié activé")
+
+    def check_auth():
+        """Vérifie si l'utilisateur est connecté"""
+        return session.get('logged_in', False)
+
+    def login_required_simple(f):
+        """Décorateur simple pour l'authentification"""
+        @wraps(f)
+        def decorated_function(*args, **kwargs):
+            if not check_auth():
+                return redirect('/login')
+            return f(*args, **kwargs)
+        return decorated_function
+    return decorator
+
+    
+
 def login_required_page(f):
     """Décorateur pour les pages web - redirige vers login si non authentifié"""
     @wraps(f)
@@ -66,6 +88,9 @@ def login_required_page(f):
             return redirect('/login')
         return f(*args, **kwargs)
     return decorated_function
+
+
+    login_required = login_required_simple
 
 
 class LoginForm(FlaskForm):
@@ -108,15 +133,30 @@ def validate_input(data, field_name, min_length=1, max_length=255, pattern=None,
 def create_app(config_name='default'):
     """Factory pour créer l'application Flask"""
     app = Flask(__name__)
-    app.config['SECRET_KEY'] = 'votre-clé-secrète'
 
     # Configuration
     app.config.from_object(config[config_name])
+    # Configuration de la secret key depuis Docker ou config
+    secret_key_file = os.environ.get('SECRET_KEY_FILE')
+    if secret_key_file and os.path.exists(secret_key_file):
+        # Chargement depuis le secret Docker
+        with open(secret_key_file, 'r') as f:
+            app.config['SECRET_KEY'] = f.read().strip()
+    elif not app.config.get('SECRET_KEY'):
+        # Fallback vers la variable d'environnement ou config par défaut
+        app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', app.config.get('SECRET_KEY', 'default-secret-key'))
 
-    # Initialisation des extensions
-    Session(app)
-    # csrf = CSRFProtect(app)  # Temporairement désactivé
-    
+    # Sessions Flask : si Flask-Session dispo, sinon sessions natives
+    if FULL_FEATURES:
+        Session(app)  # sessions côté serveur
+    else:
+        print("ℹ️ Utilisation des sessions natives Flask")
+
+    # S'assurer que le répertoire data existe pour la base SQLite
+    data_dir = os.path.dirname(app.config['DATABASE_PATH'])
+    if not os.path.exists(data_dir):
+        os.makedirs(data_dir, exist_ok=True)
+
     # Headers de sécurité
     @app.after_request
     def add_security_headers(response):
@@ -124,7 +164,13 @@ def create_app(config_name='default'):
         response.headers['X-Frame-Options'] = 'DENY'
         response.headers['X-XSS-Protection'] = '1; mode=block'
         response.headers['Strict-Transport-Security'] = 'max-age=31536000; includeSubDomains'
-        response.headers['Content-Security-Policy'] = "default-src 'self'; script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com; font-src 'self' https://cdnjs.cloudflare.com; img-src 'self' data:;"
+        response.headers['Content-Security-Policy'] = (
+            "default-src 'self'; "
+            "script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com; "
+            "style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com; "
+            "font-src 'self' https://cdnjs.cloudflare.com; "
+            "img-src 'self' data:;"
+        )
         return response
 
     # Initialisation de la base de données
@@ -182,9 +228,12 @@ def create_app(config_name='default'):
             session_manager = SessionManager(app.db)
             session_token = session_manager.create_session(user_id, remember_me)
 
+
             # Stocke les informations dans la session Flask
             session['user_id'] = user_id
+
             session['username'] = username
+            session['master_password'] = master_password  # Stockage temporaire pour déchiffrement
 
             return jsonify({
                 'message': 'Connexion réussie',
@@ -381,10 +430,14 @@ def create_app(config_name='default'):
         """Récupère un mot de passe spécifique (déchiffré)"""
         user_id = get_current_user_id()
 
-        # Récupère le mot de passe maître depuis l'en-tête
-        master_password = request.headers.get('X-Master-Password')
+        # Essayer d'abord avec le mot de passe maître en session
+        master_password = session.get('master_password')
+
+        # Si pas en session, récupérer depuis l'en-tête
         if not master_password:
-            return jsonify({'error': 'Mot de passe maître requis'}), 400
+            master_password = request.headers.get('X-Master-Password')
+            if not master_password:
+                return jsonify({'error': 'Mot de passe maître requis'}), 400
 
         password_data = app.db.get_password_by_id(password_id, user_id)
         if not password_data:
@@ -397,7 +450,8 @@ def create_app(config_name='default'):
 
             # Déchiffre les données sensibles
             decrypted_password = crypto.decrypt_data(password_data['password_encrypted'], encryption_key)
-            decrypted_notes = crypto.decrypt_data(password_data['notes_encrypted'], encryption_key) if password_data['notes_encrypted'] else ""
+            decrypted_notes = crypto.decrypt_data(password_data['notes_encrypted'], encryption_key) if password_data[
+                'notes_encrypted'] else ""
 
             # Met à jour la date de dernière utilisation
             app.db.update_last_used(password_id, user_id)
