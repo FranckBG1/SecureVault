@@ -197,6 +197,42 @@
     </div>
 </div>
 
+<!-- Modal pour confirmer la suppression -->
+<div id="delete-confirm-modal" class="modal" style="display: none;">
+    <div class="modal-content" style="max-width: 400px;">
+        <div class="modal-header">
+            <h3>Confirmer la suppression</h3>
+            <button class="modal-close" id="close-delete-confirm-modal">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+
+        <div class="modal-body" style="padding: 20px; text-align: center;">
+            <div style="color: #e74c3c; font-size: 48px; margin-bottom: 16px;">
+                <i class="fas fa-exclamation-triangle"></i>
+            </div>
+            <h4 style="margin-bottom: 12px;">Supprimer ce mot de passe ?</h4>
+            <p style="color: #666; margin-bottom: 0;">
+                Cette action est irréversible. Le mot de passe "<strong id="delete-password-title"></strong>" sera définitivement supprimé.
+            </p>
+        </div>
+
+        <div class="modal-actions">
+            <button type="button" class="btn btn-secondary" id="cancel-delete">
+                <i class="fas fa-times"></i>
+                Annuler
+            </button>
+            <button type="button" class="btn btn-danger" id="confirm-delete" style="background-color: #e74c3c;">
+                <i class="fas fa-trash"></i>
+                <span id="delete-text">Supprimer</span>
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Overlay pour la modal de suppression -->
+<div id="delete-modal-overlay" class="modal-overlay" style="display: none;"></div>
+
 <!-- Overlay pour la modal du mot de passe maître -->
 <div id="master-modal-overlay" class="modal-overlay" style="display: none;"></div>
 
@@ -240,6 +276,11 @@
     const masterPasswordForm = document.getElementById('master-password-form');
     const masterPasswordInput = document.getElementById('master-password-input');
     const confirmMasterPasswordBtn = document.getElementById('confirm-master-password');
+
+    // Éléments pour la modal de confirmation de suppression
+    const deleteConfirmModal = document.getElementById('delete-confirm-modal');
+    const confirmDeleteBtn = document.getElementById('confirm-delete');
+    const cancelDeleteBtn = document.getElementById('cancel-delete');
 
     // Chargement des mots de passe
     async function loadPasswords() {
@@ -308,7 +349,7 @@
                 <button class="action-btn edit-btn" title="Modifier" onclick="editPassword(${password.id})">
                     <i class="fas fa-edit"></i>
                 </button>
-                <button class="action-btn delete-btn" title="Supprimer" onclick="deletePassword(${password.id})">
+                <button class="action-btn delete-btn" title="Supprimer" onclick="confirmDeletePassword(${password.id}, '${escapeHtml(password.title)}')">
                     <i class="fas fa-trash"></i>
                 </button>
             </td>
@@ -456,13 +497,29 @@
         }
     }
 
-    async function deletePassword(passwordId) {
-        if (!confirm('Êtes-vous sûr de vouloir supprimer ce mot de passe ?')) {
-            return;
-        }
+    // Confirmer la suppression d'un mot de passe
+    function confirmDeletePassword(passwordId, passwordTitle) {
+        pendingPasswordId = passwordId;
+        document.getElementById('delete-password-title').textContent = passwordTitle;
+        deleteConfirmModal.style.display = 'block';
+        document.getElementById('delete-modal-overlay').style.display = 'block';
+    }
+
+    function closeDeleteConfirmModal() {
+        deleteConfirmModal.style.display = 'none';
+        document.getElementById('delete-modal-overlay').style.display = 'none';
+        pendingPasswordId = null;
+    }
+
+    // Soumettre la suppression
+    async function handleDeleteConfirm() {
+        if (!pendingPasswordId) return;
+
+        confirmDeleteBtn.disabled = true;
+        document.getElementById('delete-text').textContent = 'Suppression...';
 
         try {
-            const response = await fetch(`/api/passwords/${passwordId}`, {
+            const response = await fetch(`/api/passwords/${pendingPasswordId}`, {
                 method: 'DELETE'
             });
 
@@ -473,9 +530,15 @@
             showSuccessNotification('Mot de passe supprimé !');
             loadPasswords();
 
+            // Fermer la modal de confirmation
+            closeDeleteConfirmModal();
+
         } catch (error) {
             console.error('Erreur lors de la suppression:', error);
             showError('Erreur lors de la suppression');
+        } finally {
+            confirmDeleteBtn.disabled = false;
+            document.getElementById('delete-text').textContent = 'Supprimer';
         }
     }
 
@@ -541,6 +604,11 @@
     }
 
     function openPasswordModalForEdit(passwordData) {
+        // S'assurer que editingPasswordId est défini avant d'ouvrir la modal
+        if (!editingPasswordId && passwordData.id) {
+            editingPasswordId = passwordData.id;
+        }
+
         passwordModal.style.display = 'block';
         document.getElementById('modal-overlay').style.display = 'block';
         document.getElementById('modal-title').textContent = 'Modifier le mot de passe';
@@ -814,6 +882,12 @@
     document.getElementById('cancel-master-password').addEventListener('click', closeMasterPasswordModal);
     masterPasswordForm.addEventListener('submit', handleMasterPasswordSubmit);
 
+    // Event Listeners pour la modal de confirmation de suppression
+    document.getElementById('close-delete-confirm-modal').addEventListener('click', closeDeleteConfirmModal);
+    document.getElementById('delete-modal-overlay').addEventListener('click', closeDeleteConfirmModal);
+    cancelDeleteBtn.addEventListener('click', closeDeleteConfirmModal);
+    confirmDeleteBtn.addEventListener('click', handleDeleteConfirm);
+
     passwordPasswordInput.addEventListener('input', (e) => {
         analyzePasswordStrengthInModal(e.target.value);
     });
@@ -829,6 +903,8 @@
                 closeMasterPasswordModal();
             } else if (passwordModal.style.display === 'block') {
                 closePasswordModal();
+            } else if (deleteConfirmModal.style.display === 'block') {
+                closeDeleteConfirmModal();
             }
         }
     });
