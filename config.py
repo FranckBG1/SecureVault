@@ -9,13 +9,10 @@ class Config:
     SECRET_KEY = os.environ.get('SECRET_KEY') or 'dev-secret-key-change-in-production'
 
     # Configuration de la base de données
-    DATABASE_PATH = os.path.join(os.path.dirname(__file__), 'securevault.db')
+    DATABASE_PATH = os.environ.get('DATABASE_PATH') or os.path.join(os.path.dirname(__file__), 'data', 'securevault.db')
 
-    # Configuration des sessions
-    SESSION_TYPE = 'filesystem'
+    # Configuration des sessions - Utilisation des sessions Flask natives (en mémoire)
     SESSION_PERMANENT = False
-    SESSION_USE_SIGNER = True
-    SESSION_KEY_PREFIX = 'securevault:'
     PERMANENT_SESSION_LIFETIME = timedelta(minutes=30)
 
     # Configuration de sécurité

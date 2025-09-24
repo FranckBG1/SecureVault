@@ -7,7 +7,6 @@ import os
 from datetime import datetime, timedelta
 
 from flask import Flask, request, jsonify, session, render_template, flash, redirect
-from flask_session import Session
 from flask_wtf import FlaskForm
 from wtforms import StringField, PasswordField, SubmitField
 from wtforms.validators import DataRequired
@@ -18,16 +17,19 @@ try:
     from config import config
     from crypto_utils import PasswordGenerator, CryptoManager
     from database import DatabaseManager
+
     FULL_FEATURES = True
 except ImportError:
     FULL_FEATURES = False
     print("⚠️ Modules avancés non disponibles, mode simplifié activé")
-    
+
+
     # Fonction simple de vérification d'authentification
     def check_auth():
         """Vérifie si l'utilisateur est connecté"""
         return session.get('logged_in', False)
-    
+
+
     def login_required_simple(f):
         """Décorateur simple pour l'authentification"""
         from functools import wraps
@@ -38,8 +40,10 @@ except ImportError:
                     return jsonify({'error': 'Non autorisé', 'redirect': '/login'}), 401
                 return redirect('/login')
             return f(*args, **kwargs)
+
         return decorated_function
-    
+
+
     def login_required_page(f):
         """Décorateur pour les pages web - redirige directement"""
         from functools import wraps
@@ -48,10 +52,11 @@ except ImportError:
             if not check_auth():
                 return redirect('/login')
             return f(*args, **kwargs)
-        return decorated_function
-    
-    login_required = login_required_simple
 
+        return decorated_function
+
+
+    login_required = login_required_simple
 
 
 class LoginForm(FlaskForm):
@@ -63,13 +68,27 @@ class LoginForm(FlaskForm):
 def create_app(config_name='default'):
     """Factory pour créer l'application Flask"""
     app = Flask(__name__)
-    app.config['SECRET_KEY'] = 'votre-clé-secrète'
 
     # Configuration
     app.config.from_object(config[config_name])
 
-    # Initialisation des extensions
-    Session(app)
+    # Configuration de la secret key depuis les secrets Docker ou la config
+    secret_key_file = os.environ.get('SECRET_KEY_FILE')
+    if secret_key_file and os.path.exists(secret_key_file):
+        # Chargement depuis le secret Docker
+        with open(secret_key_file, 'r') as f:
+            app.config['SECRET_KEY'] = f.read().strip()
+    elif not app.config.get('SECRET_KEY'):
+        # Fallback vers la variable d'environnement ou la config
+        app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', app.config['SECRET_KEY'])
+
+    # Sessions Flask natives (pas besoin d'initialisation d'extension)
+    # Les sessions sont maintenant gérées nativement par Flask
+
+    # S'assurer que le répertoire data existe
+    data_dir = os.path.dirname(app.config['DATABASE_PATH'])
+    if not os.path.exists(data_dir):
+        os.makedirs(data_dir, exist_ok=True)
 
     # Initialisation de la base de données
     app.db = DatabaseManager(app.config['DATABASE_PATH'])
@@ -125,8 +144,9 @@ def create_app(config_name='default'):
             session_manager = SessionManager(app.db)
             session_token = session_manager.create_session(user_id, remember_me)
 
-            # Stocke le nom d'utilisateur pour les vérifications futures
+            # Stocke le nom d'utilisateur et le mot de passe maître en session
             session['username'] = username
+            session['master_password'] = master_password  # Stockage temporaire pour déchiffrement
 
             return jsonify({
                 'message': 'Connexion réussie',
@@ -185,10 +205,14 @@ def create_app(config_name='default'):
         """Récupère un mot de passe spécifique (déchiffré)"""
         user_id = get_current_user_id()
 
-        # Récupère le mot de passe maître depuis l'en-tête
-        master_password = request.headers.get('X-Master-Password')
+        # Essayer d'abord avec le mot de passe maître en session
+        master_password = session.get('master_password')
+
+        # Si pas en session, récupérer depuis l'en-tête
         if not master_password:
-            return jsonify({'error': 'Mot de passe maître requis'}), 400
+            master_password = request.headers.get('X-Master-Password')
+            if not master_password:
+                return jsonify({'error': 'Mot de passe maître requis'}), 400
 
         password_data = app.db.get_password_by_id(password_id, user_id)
         if not password_data:
@@ -201,7 +225,8 @@ def create_app(config_name='default'):
 
             # Déchiffre les données sensibles
             decrypted_password = crypto.decrypt_data(password_data['password_encrypted'], encryption_key)
-            decrypted_notes = crypto.decrypt_data(password_data['notes_encrypted'], encryption_key) if password_data['notes_encrypted'] else ""
+            decrypted_notes = crypto.decrypt_data(password_data['notes_encrypted'], encryption_key) if password_data[
+                'notes_encrypted'] else ""
 
             # Met à jour la date de dernière utilisation
             app.db.update_last_used(password_id, user_id)

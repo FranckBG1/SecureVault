@@ -2,7 +2,7 @@
 setlocal enabledelayedexpansion
 
 REM Script de gestion de l'environnement Docker SecureVault pour Windows
-REM Usage: docker-manager.bat [start|stop|restart|logs|backup|restore|status]
+REM Usage: docker-manager.bat [start|stop|restart|logs|status]
 
 set PROJECT_NAME=securevault
 set COMPOSE_FILE=docker-compose.yml
@@ -12,7 +12,6 @@ if "%1"=="start" (
 
     REM Créer les répertoires nécessaires
     if not exist "data" mkdir data
-    if not exist "backups" mkdir backups
     if not exist "logs" mkdir logs
 
     REM Générer les secrets si ils n'existent pas
@@ -42,22 +41,6 @@ if "%1"=="start" (
     echo 📋 Affichage des logs...
     docker-compose logs -f --tail=100
 
-) else if "%1"=="backup" (
-    echo 💾 Lancement de la sauvegarde manuelle...
-    docker-compose exec backup-service sh /scripts/backup.sh
-    echo ✅ Sauvegarde terminée
-
-) else if "%1"=="restore" (
-    if "%2"=="" (
-        echo ❌ Usage: %0 restore ^<nom_fichier_backup^>
-        echo 📂 Sauvegardes disponibles:
-        dir /b backups\securevault_backup_*.db* 2>nul || echo Aucune sauvegarde trouvée
-        exit /b 1
-    )
-    echo 🔄 Restauration depuis: %2
-    docker-compose exec backup-service sh /scripts/restore.sh %2
-    echo ✅ Restauration terminée
-
 ) else if "%1"=="status" (
     echo 📊 État des services SecureVault:
     docker-compose ps
@@ -72,7 +55,6 @@ if "%1"=="start" (
         docker-compose down -v
         docker system prune -f
         del /q data\* 2>nul
-        del /q backups\* 2>nul
         del /q logs\* 2>nul
         echo ✅ Nettoyage terminé
     ) else (
@@ -89,14 +71,10 @@ if "%1"=="start" (
     echo   stop     - Arrêter SecureVault
     echo   restart  - Redémarrer SecureVault
     echo   logs     - Afficher les logs en temps réel
-    echo   backup   - Créer une sauvegarde manuelle
-    echo   restore  - Restaurer depuis une sauvegarde
     echo   status   - Afficher l'état des services
     echo   clean    - Nettoyage complet (DANGER)
     echo.
     echo Exemples:
     echo   %0 start
     echo   %0 logs
-    echo   %0 backup
-    echo   %0 restore securevault_backup_20231201_120000.db.gz
 )
