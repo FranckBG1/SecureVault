@@ -9,7 +9,11 @@ class Config:
     SECRET_KEY = os.environ.get('SECRET_KEY') or 'dev-secret-key-change-in-production'
 
     # Configuration de la base de données
-    DATABASE_PATH = os.environ.get('DATABASE_PATH') or os.path.join(os.path.dirname(__file__), 'data', 'securevault.db')
+    # Sur Vercel le filesystem est en lecture seule sauf /tmp
+    DATABASE_PATH = os.environ.get('DATABASE_PATH') or (
+        '/tmp/securevault.db' if os.environ.get('VERCEL')
+        else os.path.join(os.path.dirname(__file__), 'data', 'securevault.db')
+    )
 
     # Configuration des sessions - Utilisation des sessions Flask natives (en mémoire)
     SESSION_PERMANENT = False

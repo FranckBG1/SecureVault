@@ -1,5 +1,4 @@
 Flask==2.3.3
-pywebview==4.4.1
 Jinja2==3.1.2
 Werkzeug==2.3.7
 cryptography==41.0.7
@@ -7,7 +6,5 @@ bcrypt==4.1.2
 pycryptodome==3.19.0
 Flask-WTF==1.1.1
 WTForms==3.0.1
-pyinstaller==6.16.0
-appdirs==1.4.4
 
 

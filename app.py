@@ -942,7 +942,9 @@ def create_app(config_name='default'):
     return app
 
 
-# Point d'entrée principal
+# Instance WSGI exposée pour Vercel, Gunicorn, et autres serveurs WSGI
+app = create_app(os.environ.get('FLASK_ENV', 'production'))
+
+# Point d'entrée pour le développement local
 if __name__ == '__main__':
-    app = create_app(os.environ.get('FLASK_ENV', 'development'))
-    app.run(debug=True, host='0.0.0.0', port=5000)
+    app.run(debug=os.environ.get('FLASK_ENV') == 'development', host='0.0.0.0', port=5000)
