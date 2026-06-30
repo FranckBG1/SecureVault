@@ -73,6 +73,5 @@ docs/_build/
 secrets/
 .env*
 *.key
-*.txt
-
+secrets/*.txt
 .env.production
