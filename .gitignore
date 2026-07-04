@@ -9,10 +9,16 @@
 env/
 venv/
 .env
+.env.*
 .venv/
 ENV/
 env.bak/
 venv.bak/
+
+# Secrets et configuration sensible
+secrets/
+*.secret
+*.key
 
 # Cache Python
 __pycache__/

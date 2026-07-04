@@ -672,6 +672,7 @@ def create_app(config_name='default'):
             }
 
             return jsonify(result), 200
+
         except ValueError as e:
             return jsonify({'error': 'Mot de passe maître incorrect'}), 401
         except Exception as e:
