@@ -9,9 +9,23 @@
     {% block head %}{% endblock %}
 </head>
 <body class="{% block body_class %}dashboard-page{% endblock %}">
+    <!-- Barre mobile -->
+    <div class="mobile-topbar">
+        <button class="mobile-menu-btn" id="mobile-menu-btn" aria-label="Ouvrir le menu">
+            <i class="fas fa-bars"></i>
+        </button>
+        <div class="mobile-topbar-logo">
+            <span>🔒</span>
+            <span>SecureVault</span>
+        </div>
+    </div>
+
     <div class="dashboard-container">
+        <!-- Overlay pour la sidebar mobile -->
+        <div class="sidebar-overlay" id="sidebar-overlay"></div>
+
         <!-- Sidebar -->
-        <div class="sidebar">
+        <div class="sidebar" id="sidebar">
             <div class="sidebar-header">
                 <div class="logo">
                     <div style="font-size: 2rem; color: #667eea; margin-bottom: 5px;">🔒</div>
@@ -67,7 +81,10 @@
         document.addEventListener('DOMContentLoaded', function() {
             // Initialise le verrouillage automatique
             initAutoLock();
-            
+
+            // Initialise le menu mobile
+            initMobileSidebar();
+
             // Gestion de la déconnexion
             const logoutBtn = document.getElementById('logout-btn');
             if (logoutBtn) {
@@ -87,6 +104,38 @@
             }
         });
         
+        // Gestion de l'ouverture/fermeture de la sidebar sur mobile
+        function initMobileSidebar() {
+            const menuBtn = document.getElementById('mobile-menu-btn');
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('sidebar-overlay');
+            if (!menuBtn || !sidebar || !overlay) return;
+
+            function openSidebar() {
+                sidebar.classList.add('active');
+                overlay.classList.add('active');
+            }
+
+            function closeSidebar() {
+                sidebar.classList.remove('active');
+                overlay.classList.remove('active');
+            }
+
+            menuBtn.addEventListener('click', function() {
+                if (sidebar.classList.contains('active')) {
+                    closeSidebar();
+                } else {
+                    openSidebar();
+                }
+            });
+
+            overlay.addEventListener('click', closeSidebar);
+
+            sidebar.querySelectorAll('.nav-link').forEach(function(link) {
+                link.addEventListener('click', closeSidebar);
+            });
+        }
+
         // Initialisation du système de verrouillage automatique
         function initAutoLock() {
             // Charge les paramètres de verrouillage
